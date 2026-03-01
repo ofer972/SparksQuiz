@@ -1,0 +1,29 @@
+@import "tailwindcss";
+
+:root {
+  --bg: #1a1a2e;
+  --card: #16213e;
+}
+
+body {
+  background: var(--bg);
+  color: #f0f0f0;
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  min-height: 100vh;
+}
+
+/* Answer button colors */
+.btn-red    { background: #e21b3c; }
+.btn-blue   { background: #1368ce; }
+.btn-yellow { background: #d89e00; }
+.btn-green  { background: #26890c; }
+
+.btn-red:hover    { background: #c01030; }
+.btn-blue:hover   { background: #0e55a8; }
+.btn-yellow:hover { background: #b07f00; }
+.btn-green:hover  { background: #1c6a09; }
+
+.btn-red.selected    { outline: 4px solid #ffffff; }
+.btn-blue.selected   { outline: 4px solid #ffffff; }
+.btn-yellow.selected { outline: 4px solid #ffffff; }
+.btn-green.selected  { outline: 4px solid #ffffff; }
