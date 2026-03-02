@@ -221,6 +221,57 @@ class ConnectionManager:
         room.status = "leaderboard"
         await self.broadcast_all(pin, {"type": "leaderboard", "leaderboard": self._get_leaderboard(room)[:5]})
 
+    async def rejoin_host(self, pin: str):
+        """Send the current game state to a host reconnecting mid-game."""
+        room = self._rooms.get(pin)
+        if not room:
+            return
+
+        if room.status == "lobby":
+            await self.notify_lobby(pin)
+            return
+
+        if room.status == "question":
+            q = room.questions[room.current_question_index]
+            elapsed = time.time() - room.question_start_time
+            await self.send_host(pin, {
+                "type": "question_start",
+                "question_index": room.current_question_index,
+                "total_questions": len(room.questions),
+                "question_text": q["question_text"],
+                "question_type": q["question_type"],
+                "time_limit": room.current_question_time_limit,
+                "time_elapsed": round(elapsed, 2),
+                "answers": q["answers"],
+                "timestamp": room.question_start_time,
+            })
+            await self.send_host(pin, {
+                "type": "answer_progress",
+                "answered": len(room.current_answers),
+                "total": room.total_players_at_question_start,
+            })
+
+        elif room.status == "result":
+            q = room.questions[room.current_question_index]
+            correct_ids = [a["id"] for a in q["answers"] if a["is_correct"]]
+            await self.send_host(pin, {
+                "type": "show_results",
+                "correct_answer_ids": correct_ids,
+                "leaderboard": self._get_leaderboard(room)[:5],
+            })
+
+        elif room.status == "leaderboard":
+            await self.send_host(pin, {
+                "type": "leaderboard",
+                "leaderboard": self._get_leaderboard(room),
+            })
+
+        elif room.status == "finished":
+            await self.send_host(pin, {
+                "type": "game_over",
+                "leaderboard": self._get_leaderboard(room),
+            })
+
     async def rejoin_player(self, pin: str, nickname: str):
         """Send the current game state to a player reconnecting mid-game."""
         room = self._rooms.get(pin)

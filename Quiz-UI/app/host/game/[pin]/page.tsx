@@ -82,7 +82,8 @@ export default function HostGamePage({ params }: { params: Promise<{ pin: string
     ws.onopen = () => {
       if (connectTimeoutRef.current) clearTimeout(connectTimeoutRef.current);
       setWsError("");
-      updateStatus("lobby");
+      // Do NOT set status here — wait for the first message from the backend
+      // (lobby_update for lobby, question_start/show_results/etc. for mid-game rejoin)
       if (heartbeatRef.current) clearInterval(heartbeatRef.current);
       heartbeatRef.current = setInterval(() => {
         if (ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify({ action: "ping" }));
@@ -94,15 +95,17 @@ export default function HostGamePage({ params }: { params: Promise<{ pin: string
       switch (msg.type) {
         case "lobby_update":
           setPlayers((msg.players as string[]).map((n) => ({ nickname: n })));
-          updateStatus("lobby");
+          // Only switch to lobby if we're still in the initial connecting phase.
+          // Mid-game lobby_updates (player join/drop) must not reset the host UI.
+          if (statusRef.current === "connecting") updateStatus("lobby");
           break;
         case "question_start":
           setQuestion({ question_text: msg.question_text, question_type: msg.question_type, time_limit: msg.time_limit, answers: msg.answers });
-          setProgress({ answered: 0, total: msg.answers ? players.length : 0 });
+          setProgress({ answered: msg.answered ?? 0, total: msg.total ?? 0 });
           setQuestionNum((msg.question_index ?? 0) + 1);
           setTotalQuestions(msg.total_questions ?? 0);
           updateStatus("question");
-          startTimer(msg.time_limit, () => send({ action: "next_question" }));
+          startTimer(Math.max(1, msg.time_limit - Math.floor(msg.time_elapsed ?? 0)), () => send({ action: "next_question" }));
           break;
         case "answer_progress":
           setProgress({ answered: msg.answered, total: msg.total });

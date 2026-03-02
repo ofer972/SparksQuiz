@@ -39,7 +39,7 @@ async def host_ws(websocket: WebSocket, pin: str):
 
     logger.info(f"✅ WS HOST ACCEPTED  pin={pin}  quiz_id={room.quiz_id}  status={room.status}")
     await manager.connect_host(pin, websocket)
-    await manager.notify_lobby(pin)
+    await manager.rejoin_host(pin)
 
     # Load questions once and cache in RoomState — players will reuse them
     if not room.questions:
