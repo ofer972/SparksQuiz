@@ -59,6 +59,26 @@ def _status_style(code: int, method_color: str) -> tuple[str, str]:
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     logger.info("🚀 Starting SparksQuiz API...")
+
+    # ── Environment variable dump (safe — secrets are masked) ─────────────────
+    def _mask(val: str) -> str:
+        """Show first 4 chars then asterisks for secrets."""
+        return val[:4] + "****" if len(val) > 4 else "****"
+
+    db_url   = os.getenv("DATABASE_URL", "")
+    env_vars = {
+        "DATABASE_URL":        _mask(db_url) if db_url else "(not set)",
+        "DB_NAME":             os.getenv("DB_NAME",             "(not set)"),
+        "FRONTEND_URL":        os.getenv("FRONTEND_URL",        "(not set)"),
+        "APP_URL":             os.getenv("APP_URL",             "(not set)"),
+        "DEFAULT_HOST_EMAIL":  os.getenv("DEFAULT_HOST_EMAIL",  "(not set)"),
+        "RESEND_API_KEY":      _mask(os.getenv("RESEND_API_KEY", "")) if os.getenv("RESEND_API_KEY") else "(not set)",
+        "JWT_SECRET":          _mask(os.getenv("JWT_SECRET",    "")) if os.getenv("JWT_SECRET") else "(not set)",
+        "PORT":                os.getenv("PORT",                "(not set)"),
+    }
+    logger.info("📋 Environment variables:")
+    for key, val in env_vars.items():
+        logger.info(f"   {key:<22} = {val}")
     connection_string = get_connection_string()
     ensure_database_exists(connection_string)
     engine = get_db_engine()
