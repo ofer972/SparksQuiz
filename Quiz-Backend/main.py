@@ -79,6 +79,7 @@ async def lifespan(app: FastAPI):
     logger.info("📋 Environment variables:")
     for key, val in env_vars.items():
         logger.info(f"   {key:<22} = {val}")
+    logger.info(f"🔒 CORS allow_origins    = {[FRONTEND_URL]}")
     connection_string = get_connection_string()
     ensure_database_exists(connection_string)
     engine = get_db_engine()
@@ -122,7 +123,11 @@ async def timing_middleware(request: Request, call_next):
     if request.method == "GET" and request.query_params:
         qs = f" | params: {dict(request.query_params)}"
 
-    logger.info(f"{color}{emoji}  {request.method} {path}{qs} — START{Colors.RESET}")
+    origin = request.headers.get("origin", "")
+    if request.method == "OPTIONS":
+        logger.info(f"{color}{emoji}  {request.method} {path} | Origin: '{origin}' — START{Colors.RESET}")
+    else:
+        logger.info(f"{color}{emoji}  {request.method} {path}{qs} — START{Colors.RESET}")
 
     response = await call_next(request)
 
