@@ -18,12 +18,14 @@ export default function HostDashboard() {
 
   const fetchQuizzes = async () => {
     try {
-      const [quizData, meData] = await Promise.all([
-        getQuizzes(),
-        apiFetch<Me>("/auth/me"),
-      ]);
-      setQuizzes(quizData);
+      const meData = await apiFetch<Me>("/auth/me");
       setMe(meData);
+    } catch {
+      router.replace("/host/login");
+      return;
+    }
+    try {
+      setQuizzes(await getQuizzes());
     } catch {
       setError("Failed to load quizzes — is the backend running?");
     } finally {

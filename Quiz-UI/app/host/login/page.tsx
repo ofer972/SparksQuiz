@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, FormEvent, Suspense } from "react";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import { apiFetch } from "@/lib/api";
 import Logo from "@/components/Logo";
 
@@ -55,7 +55,13 @@ function LoginForm() {
   const [status, setStatus] = useState<"idle" | "loading" | "sent" | "error">("idle");
   const [error, setError] = useState("");
   const searchParams = useSearchParams();
+  const router = useRouter();
   const next = searchParams.get("next") ?? "/host";
+
+  // If already logged in, go straight to dashboard
+  useEffect(() => {
+    apiFetch("/auth/me").then(() => router.replace(next)).catch(() => {});
+  }, [next, router]);
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();

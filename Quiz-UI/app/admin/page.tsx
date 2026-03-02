@@ -53,7 +53,8 @@ export default function AdminPage() {
         setError("You need admin rights to view this page.");
       }
     } catch {
-      setError("Access denied or session expired. Please log in again.");
+      router.replace("/host/login");
+      return;
     } finally {
       setLoading(false);
     }
