@@ -13,7 +13,7 @@ interface Props {
 }
 
 const COLORS = ["btn-red", "btn-blue", "btn-yellow", "btn-green"];
-const SHAPES = ["▲", "◆", "●", "■"];
+const SHAPES = ["♥", "♠", "♦", "♣"];
 
 export default function PlayerController({ question, timeLeft, phase, ack, onSubmit }: Props) {
   const [selected, setSelected] = useState<Set<number>>(new Set());
@@ -102,7 +102,7 @@ export default function PlayerController({ question, timeLeft, phase, ack, onSub
                 min-h-[80px] md:min-h-[64px]
               `}
             >
-              <span className="text-2xl">{SHAPES[i % 4]}</span>
+              <span className="text-4xl leading-none">{SHAPES[i % 4]}</span>
               <span className="flex-1 text-left">{a.text}</span>
             </button>
           );
