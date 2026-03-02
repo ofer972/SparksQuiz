@@ -1,9 +1,54 @@
 "use client";
 
-import { useState, FormEvent, Suspense } from "react";
+import { useState, useEffect, FormEvent, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { apiFetch } from "@/lib/api";
 import Logo from "@/components/Logo";
+
+// ── Backend health indicator ──────────────────────────────────────────────────
+
+function BackendStatus() {
+  const [state, setState] = useState<"checking" | "ok" | "error">("checking");
+  const [detail, setDetail] = useState("");
+
+  useEffect(() => {
+    const API = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8011";
+    fetch(`${API}/health`, { method: "GET" })
+      .then((r) => {
+        if (r.ok) { setState("ok"); }
+        else { setState("error"); setDetail(`HTTP ${r.status}`); }
+      })
+      .catch((e) => { setState("error"); setDetail(e.message ?? "unreachable"); });
+  }, []);
+
+  if (state === "checking") return (
+    <div className="flex items-center gap-2 text-slate-400 text-xs">
+      <span className="w-2 h-2 rounded-full bg-slate-500 animate-pulse" />
+      Checking backend…
+    </div>
+  );
+
+  if (state === "ok") return (
+    <div className="flex items-center gap-2 text-green-400 text-xs">
+      <span className="w-2 h-2 rounded-full bg-green-400" />
+      Backend reachable
+    </div>
+  );
+
+  return (
+    <div className="text-xs text-red-400 space-y-0.5">
+      <div className="flex items-center gap-2">
+        <span className="w-2 h-2 rounded-full bg-red-500" />
+        Backend unreachable — {detail}
+      </div>
+      <div className="pl-4 text-red-500 opacity-70">
+        {process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8011"}
+      </div>
+    </div>
+  );
+}
+
+// ── Login form ────────────────────────────────────────────────────────────────
 
 function LoginForm() {
   const [email, setEmail] = useState("");
@@ -23,7 +68,6 @@ function LoginForm() {
         { method: "POST", body: JSON.stringify({ email: email.trim() }) }
       );
       if (res.direct) {
-        // Dev mode: session cookie already set, go straight to the dashboard
         window.location.href = next;
         return;
       }
@@ -92,6 +136,8 @@ function LoginForm() {
   );
 }
 
+// ── Page ──────────────────────────────────────────────────────────────────────
+
 export default function LoginPage() {
   return (
     <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4">
@@ -104,6 +150,11 @@ export default function LoginPage() {
         <Suspense fallback={<div className="text-slate-400">Loading…</div>}>
           <LoginForm />
         </Suspense>
+
+        {/* Backend connectivity indicator — shown at bottom of card */}
+        <div className="mt-6 pt-4 border-t border-slate-700 flex justify-center">
+          <BackendStatus />
+        </div>
       </div>
     </div>
   );
