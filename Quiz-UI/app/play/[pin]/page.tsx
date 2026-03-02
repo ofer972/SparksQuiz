@@ -63,14 +63,13 @@ function PlayerGame({ pin }: { pin: string }) {
     setTimeLeft(0);
   };
 
-  useEffect(() => {
-    if (!nickname) { router.push("/play"); return; }
-
+  const connectWs = useCallback(() => {
     const ws = new WebSocket(`${WS_URL}/ws/player/${pin}/${encodeURIComponent(nickname)}`);
     wsRef.current = ws;
 
     ws.onopen = () => {
       setPhase("connecting");
+      if (heartbeatRef.current) clearInterval(heartbeatRef.current);
       heartbeatRef.current = setInterval(() => {
         if (ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify({ action: "ping" }));
       }, 30_000);
@@ -132,10 +131,31 @@ function PlayerGame({ pin }: { pin: string }) {
       setPhase("error");
     };
 
-    ws.onclose = () => { /* handled via onerror or explicit phase changes */ };
+    ws.onclose = () => {
+      if (heartbeatRef.current) { clearInterval(heartbeatRef.current); heartbeatRef.current = null; }
+    };
+  }, [pin, nickname]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    if (!nickname) { router.push("/play"); return; }
+
+    connectWs();
+
+    // Reconnect when phone wakes up and the socket has dropped
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        const ws = wsRef.current;
+        if (!ws || ws.readyState === WebSocket.CLOSED || ws.readyState === WebSocket.CLOSING) {
+          setPhase("connecting");
+          connectWs();
+        }
+      }
+    };
+    document.addEventListener("visibilitychange", handleVisibilityChange);
 
     return () => {
-      ws.close();
+      wsRef.current?.close();
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
       if (timerRef.current) clearInterval(timerRef.current);
       if (heartbeatRef.current) clearInterval(heartbeatRef.current);
     };

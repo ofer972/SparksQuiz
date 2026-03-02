@@ -64,7 +64,7 @@ export default function HostGamePage({ params }: { params: Promise<{ pin: string
     }, 1000);
   };
 
-  useEffect(() => {
+  const connectWs = useCallback(() => {
     const wsUrl = `${WS_URL}/ws/host/${pin}`;
     console.log("[SparksQuiz] Opening host WebSocket:", wsUrl);
     const ws = new WebSocket(wsUrl);
@@ -83,6 +83,7 @@ export default function HostGamePage({ params }: { params: Promise<{ pin: string
       if (connectTimeoutRef.current) clearTimeout(connectTimeoutRef.current);
       setWsError("");
       updateStatus("lobby");
+      if (heartbeatRef.current) clearInterval(heartbeatRef.current);
       heartbeatRef.current = setInterval(() => {
         if (ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify({ action: "ping" }));
       }, 30_000);
@@ -118,7 +119,6 @@ export default function HostGamePage({ params }: { params: Promise<{ pin: string
           updateStatus("leaderboard");
           if (autoNextRef.current) {
             autoNextRef.current = false;
-            // small delay so the leaderboard state is committed before sending next
             setTimeout(() => send({ action: "next" }), 100);
           }
           break;
@@ -138,14 +138,29 @@ export default function HostGamePage({ params }: { params: Promise<{ pin: string
     };
 
     ws.onclose = () => {
-      // Only fall back to "connecting" if game hasn't ended
-      if (statusRef.current !== "finished") {
-        updateStatus("connecting");
+      if (heartbeatRef.current) { clearInterval(heartbeatRef.current); heartbeatRef.current = null; }
+      if (statusRef.current !== "finished") updateStatus("connecting");
+    };
+  }, [pin, send]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    connectWs();
+
+    // Reconnect when phone wakes up and the socket has dropped
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        const ws = wsRef.current;
+        if (!ws || ws.readyState === WebSocket.CLOSED || ws.readyState === WebSocket.CLOSING) {
+          updateStatus("connecting");
+          connectWs();
+        }
       }
     };
+    document.addEventListener("visibilitychange", handleVisibilityChange);
 
     return () => {
-      ws.close();
+      wsRef.current?.close();
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
       if (timerRef.current) clearInterval(timerRef.current);
       if (connectTimeoutRef.current) clearTimeout(connectTimeoutRef.current);
       if (heartbeatRef.current) clearInterval(heartbeatRef.current);
