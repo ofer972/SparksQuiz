@@ -94,7 +94,7 @@ function PlayerGame({ pin }: { pin: string }) {
           setAck(null);
           setCorrectIds([]);
           setPhase("question");
-          startTimer(msg.time_limit);
+          startTimer(Math.max(1, msg.time_limit - Math.floor(msg.time_elapsed ?? 0)));
           break;
         case "answer_ack":
           stopTimer();

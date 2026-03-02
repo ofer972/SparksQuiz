@@ -130,20 +130,24 @@ async def player_ws(websocket: WebSocket, pin: str, nickname: str):
             return
 
     if room.status != "lobby":
-        logger.warning(f"❌ WS PLAYER REJECTED  pin={pin}  nickname={nickname}  reason=game_already_started  status={room.status}")
-        await websocket.accept()
-        await websocket.close(code=4003)
-        return
-
-    if nickname not in room.registered_nicknames:
-        logger.warning(f"❌ WS PLAYER REJECTED  pin={pin}  nickname={nickname}  reason=not_registered  registered={room.registered_nicknames}")
-        await websocket.accept()
-        await websocket.close(code=4003)
-        return
-
-    logger.info(f"✅ WS PLAYER ACCEPTED  pin={pin}  nickname={nickname}  registered_players={len(room.registered_nicknames)}")
-    await manager.connect_player(pin, nickname, websocket)
-    await manager.notify_lobby(pin)
+        # Allow registered players to reconnect mid-game (e.g. after phone sleep)
+        if nickname not in room.registered_nicknames:
+            logger.warning(f"❌ WS PLAYER REJECTED  pin={pin}  nickname={nickname}  reason=game_active_not_registered")
+            await websocket.accept()
+            await websocket.close(code=4003)
+            return
+        logger.info(f"♻️  WS PLAYER REJOIN  pin={pin}  nickname={nickname}  status={room.status}")
+        await manager.connect_player(pin, nickname, websocket)
+        await manager.rejoin_player(pin, nickname)
+    else:
+        if nickname not in room.registered_nicknames:
+            logger.warning(f"❌ WS PLAYER REJECTED  pin={pin}  nickname={nickname}  reason=not_registered  registered={room.registered_nicknames}")
+            await websocket.accept()
+            await websocket.close(code=4003)
+            return
+        logger.info(f"✅ WS PLAYER ACCEPTED  pin={pin}  nickname={nickname}  registered_players={len(room.registered_nicknames)}")
+        await manager.connect_player(pin, nickname, websocket)
+        await manager.notify_lobby(pin)
 
     if not room.questions:
         logger.info(f"📚 Loading questions for quiz_id={room.quiz_id} (player fallback)")
