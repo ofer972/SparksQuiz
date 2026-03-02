@@ -22,6 +22,23 @@ RESEND_FROM   = os.getenv("RESEND_FROM", "SparksQuiz <onboarding@resend.dev>")
 COOKIE_NAME   = "sq_session"
 COOKIE_MAX_AGE = 30 * 24 * 3600   # 30 days
 
+DEFAULT_HOST_EMAIL = os.getenv("DEFAULT_HOST_EMAIL", "")
+
+
+def _cookie_kwargs() -> dict:
+    """Return cookie security settings appropriate for the current environment.
+    Cross-domain (Railway) requires SameSite=None + Secure=True.
+    Local dev (http) uses SameSite=lax + Secure=False.
+    """
+    frontend = os.getenv("FRONTEND_URL", os.getenv("APP_URL", ""))
+    is_https = frontend.startswith("https://")
+    return {
+        "httponly": True,
+        "samesite": "none" if is_https else "lax",
+        "secure": is_https,
+        "max_age": COOKIE_MAX_AGE,
+    }
+
 
 # ── Email helper ───────────────────────────────────────────────────────────────
 
@@ -91,9 +108,6 @@ class RequestLinkBody(BaseModel):
     email: str
 
 
-DEFAULT_HOST_EMAIL = os.getenv("DEFAULT_HOST_EMAIL", "").lower().strip()
-
-
 @router.post("/request-link")
 def request_link(body: RequestLinkBody, response: Response, conn: Connection = Depends(get_db_connection)):
     email = body.email.lower().strip()
@@ -103,17 +117,15 @@ def request_link(body: RequestLinkBody, response: Response, conn: Connection = D
     if not host["is_active"]:
         raise HTTPException(403, "This account has been revoked. Contact an admin.")
 
+    superadmin = DEFAULT_HOST_EMAIL.lower().strip()
     # Super-admin bypass: DEFAULT_HOST_EMAIL logs in directly — no magic link needed
-    if DEFAULT_HOST_EMAIL and email == DEFAULT_HOST_EMAIL:
+    if superadmin and email == superadmin:
         update_last_login(conn, host["id"])
         conn.commit()
         jwt_token = create_session_jwt(
             host["id"], host["email"], host["name"] or "", host["is_admin"]
         )
-        response.set_cookie(
-            COOKIE_NAME, jwt_token, max_age=COOKIE_MAX_AGE,
-            httponly=True, samesite="lax", secure=False,
-        )
+        response.set_cookie(COOKIE_NAME, jwt_token, **_cookie_kwargs())
         logger.info(f"Direct login for super-admin: {email}")
         return {"direct": True}
 
@@ -150,20 +162,14 @@ def verify_token(token: str, response: Response, conn: Connection = Depends(get_
     jwt_token = create_session_jwt(
         host["id"], host["email"], host["name"] or "", host["is_admin"]
     )
-    response.set_cookie(
-        COOKIE_NAME,
-        jwt_token,
-        max_age=COOKIE_MAX_AGE,
-        httponly=True,
-        samesite="lax",
-        secure=False,   # set True when deploying with HTTPS
-    )
+    response.set_cookie(COOKIE_NAME, jwt_token, **_cookie_kwargs())
     return {"ok": True, "name": host["name"], "is_admin": host["is_admin"]}
 
 
 @router.post("/logout")
 def logout(response: Response):
-    response.delete_cookie(COOKIE_NAME, samesite="lax")
+    kwargs = _cookie_kwargs()
+    response.delete_cookie(COOKIE_NAME, samesite=kwargs["samesite"], secure=kwargs["secure"])
     return {"ok": True}
 
 
