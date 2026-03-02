@@ -13,7 +13,12 @@ _cached_engine = None
 
 
 def get_connection_string() -> str:
-    return os.getenv("DATABASE_URL", "postgresql://postgres:password@localhost:5432/Quiz")
+    base = os.getenv("DATABASE_URL", "postgresql://postgres:password@localhost:5432/Quiz")
+    db_name = os.getenv("DB_NAME", "")
+    if db_name:
+        # Replace the database name portion of the URL with DB_NAME
+        base = base.rsplit("/", 1)[0] + "/" + db_name
+    return base
 
 
 def ensure_database_exists(connection_string: str):
