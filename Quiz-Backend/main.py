@@ -1,4 +1,5 @@
 import logging
+import os
 import time
 from contextlib import asynccontextmanager
 
@@ -7,10 +8,11 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from database_connection import get_connection_string, ensure_database_exists, get_db_engine
 from database_tables import initialize_tables
-from database_seed import seed_default_data
+from database_seed import seed_default_data, seed_default_host
 from quiz_service import router as quiz_router
 from game_service import router as game_router
 from websockets_service import router as ws_router
+from auth_service import router as auth_router, admin_router
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -62,6 +64,7 @@ async def lifespan(app: FastAPI):
     engine = get_db_engine()
     initialize_tables(engine)
     seed_default_data(engine)
+    seed_default_host(engine)
     logger.info("✅ SparksQuiz API ready")
     yield
 
@@ -70,9 +73,11 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="SparksQuiz API", lifespan=lifespan)
 
+FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:3000")
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=[FRONTEND_URL],   # must be exact origin (not "*") for cookies to work
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -116,6 +121,8 @@ async def timing_middleware(request: Request, call_next):
 
 # ── Routers ───────────────────────────────────────────────────────────────────
 
+app.include_router(auth_router)
+app.include_router(admin_router)
 app.include_router(quiz_router)
 app.include_router(game_router)
 app.include_router(ws_router)

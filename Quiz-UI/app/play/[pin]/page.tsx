@@ -6,6 +6,7 @@ import { WS_URL } from "@/lib/api";
 import PlayerController from "@/components/PlayerController";
 import Leaderboard from "@/components/Leaderboard";
 import Podium from "@/components/Podium";
+import Logo from "@/components/Logo";
 
 type GamePhase = "connecting" | "lobby" | "question" | "answered" | "result" | "leaderboard" | "finished" | "kicked" | "error";
 
@@ -183,8 +184,8 @@ function PlayerGame({ pin }: { pin: string }) {
       {phase === "connecting" && (
         <div className="flex-1 flex items-center justify-center">
           <div className="text-center">
-            <div className="text-4xl animate-spin mb-4">⚡</div>
-            <p className="text-gray-400">Connecting to game...</p>
+            <Logo size="md" />
+            <p className="text-gray-400 mt-3">Connecting to game...</p>
           </div>
         </div>
       )}
@@ -192,7 +193,7 @@ function PlayerGame({ pin }: { pin: string }) {
       {phase === "lobby" && (
         <div className="flex-1 flex flex-col items-center justify-center">
           <div className="text-center mb-8">
-            <div className="text-5xl mb-4">🎮</div>
+            <div className="flex justify-center mb-4"><Logo size="xl" iconOnly /></div>
             <h2 className="text-2xl font-bold text-white mb-1">You&apos;re in the lobby!</h2>
             <p className="text-gray-400">Waiting for the host to start...</p>
           </div>
@@ -292,21 +293,32 @@ function PlayerGame({ pin }: { pin: string }) {
             )}
           </div>
 
-          <p className="text-center text-gray-500 text-sm">Waiting for host...</p>
+          <div className="flex flex-col items-center gap-2 py-2">
+            <div className="flex gap-1">
+              <span className="w-2 h-2 rounded-full bg-indigo-400 animate-bounce" style={{ animationDelay: "0ms" }} />
+              <span className="w-2 h-2 rounded-full bg-indigo-400 animate-bounce" style={{ animationDelay: "150ms" }} />
+              <span className="w-2 h-2 rounded-full bg-indigo-400 animate-bounce" style={{ animationDelay: "300ms" }} />
+            </div>
+            <p className="text-gray-400 text-sm font-medium">Waiting for the host to continue…</p>
+          </div>
         </div>
       )}
 
       {/* LEADERBOARD phase — show personal progress, not the full leaderboard */}
       {phase === "leaderboard" && (
         <div className="flex-1 flex flex-col items-center justify-center gap-6">
-          <div className="text-6xl">🎯</div>
           <div className="text-center">
             <h2 className="text-2xl font-bold text-white mb-1">Keep it up!</h2>
             {totalQuestions > 0 && questionNum < totalQuestions && (
-              <p className="text-gray-400 text-sm">
-                Question {questionNum + 1} of {totalQuestions} coming up...
+              <p className="text-gray-400 text-sm mb-3">
+                Question {questionNum + 1} of {totalQuestions} coming up…
               </p>
             )}
+            <div className="flex justify-center gap-1 mt-2">
+              <span className="w-2 h-2 rounded-full bg-indigo-400 animate-bounce" style={{ animationDelay: "0ms" }} />
+              <span className="w-2 h-2 rounded-full bg-indigo-400 animate-bounce" style={{ animationDelay: "150ms" }} />
+              <span className="w-2 h-2 rounded-full bg-indigo-400 animate-bounce" style={{ animationDelay: "300ms" }} />
+            </div>
           </div>
 
           <div className="bg-[#16213e] rounded-2xl p-5 w-full">

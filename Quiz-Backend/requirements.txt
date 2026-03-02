@@ -6,3 +6,5 @@ python-dotenv
 pydantic
 pydantic-settings
 websockets
+PyJWT
+resend

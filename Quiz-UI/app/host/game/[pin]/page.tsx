@@ -4,6 +4,7 @@ import { use, useCallback, useEffect, useRef, useState } from "react";
 import { WS_URL } from "@/lib/api";
 import Leaderboard from "@/components/Leaderboard";
 import Podium from "@/components/Podium";
+import Logo from "@/components/Logo";
 
 type GameStatus = "connecting" | "lobby" | "question" | "result" | "leaderboard" | "finished" | "error";
 
@@ -36,6 +37,8 @@ export default function HostGamePage({ params }: { params: Promise<{ pin: string
   const [totalQuestions, setTotalQuestions] = useState(0);
   const autoNextRef = useRef(false);   // when true, jump to next question as soon as leaderboard arrives
   const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const connectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const [connectTimedOut, setConnectTimedOut] = useState(false);
 
   const updateStatus = (s: GameStatus) => {
     statusRef.current = s;
@@ -65,8 +68,21 @@ export default function HostGamePage({ params }: { params: Promise<{ pin: string
     console.log("[SparksQuiz] Opening host WebSocket:", wsUrl);
     const ws = new WebSocket(wsUrl);
     wsRef.current = ws;
+    setConnectTimedOut(false);
 
-    ws.onopen = () => { setWsError(""); updateStatus("lobby"); };
+    // If the WebSocket doesn't open within 8 s, give up and let the user go back
+    connectTimeoutRef.current = setTimeout(() => {
+      if (statusRef.current === "connecting") {
+        setConnectTimedOut(true);
+        ws.close();
+      }
+    }, 8000);
+
+    ws.onopen = () => {
+      if (connectTimeoutRef.current) clearTimeout(connectTimeoutRef.current);
+      setWsError("");
+      updateStatus("lobby");
+    };
 
     ws.onmessage = (e) => {
       const msg = JSON.parse(e.data);
@@ -127,6 +143,7 @@ export default function HostGamePage({ params }: { params: Promise<{ pin: string
     return () => {
       ws.close();
       if (timerRef.current) clearInterval(timerRef.current);
+      if (connectTimeoutRef.current) clearTimeout(connectTimeoutRef.current);
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pin]);
@@ -148,18 +165,23 @@ export default function HostGamePage({ params }: { params: Promise<{ pin: string
     <div className="min-h-screen p-6 max-w-3xl mx-auto">
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-3xl font-extrabold text-white">
-            Game PIN: <span className="text-yellow-400 tracking-widest">{pin}</span>
-          </h1>
-          <p className="text-gray-400 text-sm mt-1">
-            Players join at:{" "}
-            <a href={playerJoinUrl} className="text-indigo-400 underline" target="_blank" rel="noreferrer">
-              {playerJoinUrl}
-            </a>
-          </p>
+        <div className="flex items-center gap-3">
+          <Logo size="xxl" iconOnly />
+          <div>
+            <h1 className="text-4xl font-extrabold leading-none">
+              Sparks<span className="text-yellow-400">Quiz</span>
+              <span className="text-gray-400 font-normal text-2xl ml-4">PIN: </span>
+              <span className="text-yellow-400 tracking-widest text-4xl font-extrabold">{pin}</span>
+            </h1>
+            <p className="text-gray-300 text-xl mt-2">
+              Players join at:{" "}
+              <a href={playerJoinUrl} className="text-indigo-400 underline font-semibold" target="_blank" rel="noreferrer">
+                {playerJoinUrl}
+              </a>
+            </p>
+          </div>
         </div>
-        <div className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${
+        <div className={`px-4 py-1.5 rounded-full text-sm font-bold uppercase tracking-wider ${
           status === "lobby" ? "bg-blue-700 text-blue-100" :
           status === "question" ? "bg-green-700 text-green-100" :
           status === "finished" ? "bg-gray-700 text-gray-300" :
@@ -182,8 +204,24 @@ export default function HostGamePage({ params }: { params: Promise<{ pin: string
       {/* CONNECTING */}
       {status === "connecting" && !wsError && (
         <div className="text-center mt-20">
-          <div className="text-4xl animate-spin mb-4">⚡</div>
-          <p className="text-gray-400">Connecting to game room...</p>
+          {connectTimedOut ? (
+            <>
+              <div className="text-5xl mb-4">⚠️</div>
+              <p className="text-white text-lg font-semibold mb-2">Could not connect to the game room</p>
+              <p className="text-gray-400 text-sm mb-6">The session may have expired or the backend is unreachable.</p>
+              <a
+                href="/host"
+                className="px-6 py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl transition"
+              >
+                ← Return to Dashboard
+              </a>
+            </>
+          ) : (
+            <>
+              <div className="text-4xl animate-spin mb-4">⚡</div>
+              <p className="text-gray-400">Connecting to game room...</p>
+            </>
+          )}
         </div>
       )}
 

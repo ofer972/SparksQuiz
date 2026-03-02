@@ -1,13 +1,12 @@
 import Link from "next/link";
+import Logo from "@/components/Logo";
 
 export default function Home() {
   return (
     <main className="min-h-screen flex flex-col items-center justify-center gap-8 p-8">
       <div className="text-center">
-        <h1 className="text-6xl font-extrabold text-white mb-3 tracking-tight">
-          Sparks<span className="text-yellow-400">Quiz</span>
-        </h1>
-        <p className="text-gray-400 text-lg">Real-time quiz battles for up to 30 players</p>
+        <Logo size="xl" />
+        <p className="text-gray-400 text-lg mt-3">Real-time quiz battles for up to 30 players</p>
       </div>
 
       <div className="flex flex-col sm:flex-row gap-4 mt-4">

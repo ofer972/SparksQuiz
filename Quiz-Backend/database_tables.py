@@ -73,4 +73,28 @@ def initialize_tables(engine):
             END $$;
         """))
 
+        conn.execute(text("""
+            CREATE TABLE IF NOT EXISTS hosts (
+                id         SERIAL PRIMARY KEY,
+                email      VARCHAR(255) UNIQUE NOT NULL,
+                name       VARCHAR(255),
+                is_active  BOOLEAN DEFAULT TRUE,
+                is_admin   BOOLEAN DEFAULT FALSE,
+                invited_at TIMESTAMP,
+                last_login TIMESTAMP,
+                invited_by VARCHAR(255)
+            )
+        """))
+
+        conn.execute(text("""
+            CREATE TABLE IF NOT EXISTS magic_link_tokens (
+                id         SERIAL PRIMARY KEY,
+                host_id    INTEGER REFERENCES hosts(id) ON DELETE CASCADE,
+                token      VARCHAR(64) UNIQUE NOT NULL,
+                expires_at TIMESTAMP NOT NULL,
+                used       BOOLEAN DEFAULT FALSE,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        """))
+
     logger.info("All tables verified/created")

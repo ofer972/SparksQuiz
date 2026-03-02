@@ -3,6 +3,7 @@ Seed data: inserted once at startup if not already present.
 Safe to run on every startup — checks for existence before inserting.
 """
 import logging
+import os
 from sqlalchemy import text
 from sqlalchemy.engine import Engine
 
@@ -278,3 +279,35 @@ def seed_default_data(engine: Engine) -> None:
             logger.info(
                 f"Seeded quiz '{quiz['title']}' with {len(quiz['questions'])} questions"
             )
+
+
+def seed_default_host(engine: Engine) -> None:
+    """
+    Ensure the default 'AS' admin host exists.
+    - Creates it if the hosts table is empty / no row matches the email.
+    - If it exists but is revoked (is_active=False) → do NOT re-activate.
+    """
+    default_email = os.getenv("DEFAULT_HOST_EMAIL", "as@sparksquiz.local")
+    default_name = "AS"
+
+    with engine.begin() as conn:
+        row = conn.execute(
+            text("SELECT id, is_active FROM hosts WHERE email = :email"),
+            {"email": default_email},
+        ).fetchone()
+
+        if row is None:
+            conn.execute(
+                text("""
+                    INSERT INTO hosts (email, name, is_active, is_admin, invited_at)
+                    VALUES (:email, :name, TRUE, TRUE, NOW())
+                """),
+                {"email": default_email, "name": default_name},
+            )
+            logger.info(f"Seeded default host '{default_name}' ({default_email})")
+        elif not row.is_active:
+            logger.info(
+                f"Default host '{default_name}' exists but is revoked — not changing"
+            )
+        else:
+            logger.info(f"Default host '{default_name}' already active — skipping")

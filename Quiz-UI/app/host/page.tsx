@@ -2,11 +2,15 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { getQuizzes, deleteQuiz, createSession, type QuizSummary } from "@/lib/api";
+import { getQuizzes, deleteQuiz, createSession, apiFetch, type QuizSummary } from "@/lib/api";
 import { useRouter } from "next/navigation";
+import Logo from "@/components/Logo";
+
+interface Me { name: string; email: string; is_admin: boolean; }
 
 export default function HostDashboard() {
   const [quizzes, setQuizzes] = useState<QuizSummary[]>([]);
+  const [me, setMe] = useState<Me | null>(null);
   const [loading, setLoading] = useState(true);
   const [starting, setStarting] = useState<number | null>(null);
   const [error, setError] = useState("");
@@ -14,12 +18,22 @@ export default function HostDashboard() {
 
   const fetchQuizzes = async () => {
     try {
-      setQuizzes(await getQuizzes());
+      const [quizData, meData] = await Promise.all([
+        getQuizzes(),
+        apiFetch<Me>("/auth/me"),
+      ]);
+      setQuizzes(quizData);
+      setMe(meData);
     } catch {
       setError("Failed to load quizzes — is the backend running?");
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleLogout = async () => {
+    await apiFetch("/auth/logout", { method: "POST" }).catch(() => {});
+    router.push("/host/login");
   };
 
   useEffect(() => { fetchQuizzes(); }, []);
@@ -49,19 +63,43 @@ export default function HostDashboard() {
 
   return (
     <div className="min-h-screen p-6 max-w-4xl mx-auto">
-      <div className="flex items-center justify-between mb-8">
-        <div>
-          <h1 className="text-4xl font-extrabold text-white">
-            Sparks<span className="text-yellow-400">Quiz</span>
-          </h1>
-          <p className="text-gray-400 mt-1">Host Dashboard</p>
+      <div className="flex items-center justify-between mb-8 flex-wrap gap-4">
+        <div className="flex items-center gap-3">
+          <Logo size="xxl" iconOnly />
+          <div>
+            <h1 className="text-3xl font-extrabold leading-none">
+              Sparks<span className="text-yellow-400">Quiz</span>
+            </h1>
+            <p className="text-gray-400 text-sm mt-0.5">Host Dashboard</p>
+          </div>
         </div>
-        <Link
-          href="/host/quiz/new"
-          className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold rounded-xl transition-all"
-        >
-          + New Quiz
-        </Link>
+        <div className="flex items-center gap-3 flex-wrap">
+          {me && (
+            <span className="text-slate-400 text-sm">
+              Signed in as <span className="text-white font-semibold">{me.name || me.email}</span>
+            </span>
+          )}
+          {me?.is_admin && (
+            <Link
+              href="/admin"
+              className="px-3 py-1.5 bg-slate-700 hover:bg-slate-600 text-slate-300 text-sm rounded-lg transition"
+            >
+              Manage Hosts
+            </Link>
+          )}
+          <button
+            onClick={handleLogout}
+            className="px-3 py-1.5 bg-slate-700 hover:bg-red-700 text-slate-300 hover:text-white text-sm rounded-lg transition"
+          >
+            Logout
+          </button>
+          <Link
+            href="/host/quiz/new"
+            className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold rounded-xl transition-all"
+          >
+            + New Quiz
+          </Link>
+        </div>
       </div>
 
       {error && (

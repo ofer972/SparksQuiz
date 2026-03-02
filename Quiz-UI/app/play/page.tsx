@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { joinSession } from "@/lib/api";
+import Logo from "@/components/Logo";
 
 export default function JoinPage() {
   const router = useRouter();
@@ -35,9 +36,9 @@ export default function JoinPage() {
   return (
     <main className="min-h-screen flex flex-col items-center justify-center p-6">
       <div className="w-full max-w-sm">
-        <h1 className="text-5xl font-extrabold text-center text-white mb-8">
-          Sparks<span className="text-yellow-400">Quiz</span>
-        </h1>
+        <div className="flex justify-center mb-8">
+          <Logo size="lg" />
+        </div>
 
         <div className="bg-[#16213e] rounded-3xl p-8 shadow-xl space-y-4">
           <div>

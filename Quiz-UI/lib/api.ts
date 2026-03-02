@@ -5,11 +5,18 @@ export const WS_URL = API.replace(/^http/, "ws");
 export async function apiFetch<T>(path: string, options?: RequestInit): Promise<T> {
   const res = await fetch(`${API}${path}`, {
     headers: { "Content-Type": "application/json" },
+    credentials: "include",   // send/receive cookies for auth
     ...options,
   });
   if (!res.ok) {
     const text = await res.text();
-    throw new Error(text || res.statusText);
+    try {
+      const json = JSON.parse(text);
+      throw new Error(json.detail || json.message || text || res.statusText);
+    } catch (e) {
+      if (e instanceof SyntaxError) throw new Error(text || res.statusText);
+      throw e;
+    }
   }
   return res.json() as Promise<T>;
 }
