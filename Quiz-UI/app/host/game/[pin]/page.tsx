@@ -327,12 +327,12 @@ export default function HostGamePage({ params }: { params: Promise<{ pin: string
             {question.answers.map((a, i) => (
               <div
                 key={a.id}
-                className={`rounded-xl p-4 text-white font-semibold flex items-center gap-3 ${
+                className={`rounded-xl p-4 text-white font-semibold flex flex-col items-center justify-center gap-2 ${
                   ["btn-red", "btn-blue", "btn-yellow", "btn-green"][i % 4]
                 }`}
               >
                 <span className="text-3xl leading-none">{"♥♠♦♣"[i % 4]}</span>
-                <span>{a.answer_text}</span>
+                <span className="text-center">{a.answer_text}</span>
               </div>
             ))}
           </div>
@@ -362,14 +362,14 @@ export default function HostGamePage({ params }: { params: Promise<{ pin: string
               {question.answers.map((a, i) => (
                 <div
                   key={a.id}
-                  className={`rounded-xl p-4 font-semibold text-white transition-all flex items-center gap-3 ${
+                  className={`rounded-xl p-4 font-semibold text-white transition-all flex flex-col items-center justify-center gap-2 ${
                     correctIds.includes(a.id)
                       ? "ring-4 ring-white scale-105 brightness-125"
                       : "opacity-40"
                   } ${["btn-red", "btn-blue", "btn-yellow", "btn-green"][i % 4]}`}
                 >
                   <span className="text-3xl leading-none">{"♥♠♦♣"[i % 4]}</span>
-                  <span>{correctIds.includes(a.id) && "✓ "}{a.answer_text}</span>
+                  <span className="text-center">{correctIds.includes(a.id) && "✓ "}{a.answer_text}</span>
                 </div>
               ))}
             </div>

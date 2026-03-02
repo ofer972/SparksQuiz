@@ -102,7 +102,7 @@ export default function PlayerController({ question, timeLeft, phase, ack, onSub
               className={`
                 ${COLORS[i % 4]}
                 ${isSelected ? "selected" : ""}
-                rounded-2xl p-4 md:p-5 flex items-center gap-3
+                rounded-2xl p-4 md:p-5 flex flex-col items-center justify-center gap-2
                 text-white font-bold text-base md:text-xl
                 transition-all active:scale-95
                 disabled:opacity-70
@@ -110,7 +110,7 @@ export default function PlayerController({ question, timeLeft, phase, ack, onSub
               `}
             >
               <span className="text-4xl leading-none">{SHAPES[i % 4]}</span>
-              <span className="flex-1 text-left">{a.text}</span>
+              <span className="text-center">{a.text}</span>
             </button>
           );
         })}
