@@ -148,6 +148,7 @@ class ConnectionManager:
         # snapshot so player disconnects don't change the denominator
         room.total_players_at_question_start = len(room.player_connections)
 
+        correct_count = sum(1 for a in question["answers"] if a["is_correct"])
         player_payload = {
             "type": "question_start",
             "question_index": room.current_question_index,
@@ -155,6 +156,7 @@ class ConnectionManager:
             "question_text": question["question_text"],
             "question_type": question["question_type"],
             "time_limit": question["time_limit"],
+            "correct_count": correct_count,
             "answers": [{"id": a["id"], "text": a["answer_text"]} for a in question["answers"]],
             "timestamp": room.question_start_time,
         }

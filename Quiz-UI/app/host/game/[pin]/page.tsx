@@ -316,6 +316,11 @@ export default function HostGamePage({ params }: { params: Promise<{ pin: string
               </div>
             </div>
             <p className="text-white text-2xl font-semibold">{question.question_text}</p>
+            {question.question_type === "multi" && (
+              <p className="text-green-400 text-xl font-black mt-3">
+                Select {question.answers.filter((a) => a.is_correct).length} answers
+              </p>
+            )}
           </div>
 
           <div className="grid grid-cols-2 gap-3">

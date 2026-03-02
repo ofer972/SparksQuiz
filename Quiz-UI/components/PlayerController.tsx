@@ -5,7 +5,7 @@ import { useState } from "react";
 interface AnswerOption { id: number; text: string; }
 interface AckData { correct: boolean; points: number; }
 interface Props {
-  question: { question_text: string; question_type: "single" | "multi"; time_limit: number; answers: AnswerOption[] };
+  question: { question_text: string; question_type: "single" | "multi"; time_limit: number; correct_count: number; answers: AnswerOption[] };
   timeLeft: number;
   phase: "question" | "answered";
   ack: AckData | null;
@@ -18,24 +18,25 @@ const SHAPES = ["♥", "♠", "♦", "♣"];
 export default function PlayerController({ question, timeLeft, phase, ack, onSubmit }: Props) {
   const [selected, setSelected] = useState<Set<number>>(new Set());
 
+  const needed = question.question_type === "multi" ? question.correct_count : 1;
+  const remaining = Math.max(0, needed - selected.size);
+
   const toggle = (id: number) => {
     if (phase !== "question") return;
     if (question.question_type === "single") {
-      // auto-submit on single
       onSubmit([id]);
       setSelected(new Set([id]));
     } else {
       setSelected((prev) => {
         const next = new Set(prev);
         if (next.has(id)) next.delete(id); else next.add(id);
+        // Auto-submit when the required number of answers is reached
+        if (next.size === needed) {
+          setTimeout(() => onSubmit(Array.from(next)), 0);
+        }
         return next;
       });
     }
-  };
-
-  const submitMulti = () => {
-    if (selected.size === 0) return;
-    onSubmit(Array.from(selected));
   };
 
   const timerPct = (timeLeft / question.time_limit) * 100;
@@ -80,7 +81,13 @@ export default function PlayerController({ question, timeLeft, phase, ack, onSub
       </div>
 
       {question.question_type === "multi" && (
-        <p className="text-gray-400 text-xs text-center">Select all correct answers, then tap Submit</p>
+        <p className={`text-center text-2xl font-black ${remaining === 0 ? "text-green-400" : "text-green-300"}`}>
+          {remaining === 0
+            ? "✓ Submitting…"
+            : remaining === needed
+              ? `Select ${needed} answer${needed > 1 ? "s" : ""}`
+              : `${remaining} more to select`}
+        </p>
       )}
 
       {/* Answer buttons — 2x2 on mobile, 1x4 on desktop */}
@@ -109,16 +116,6 @@ export default function PlayerController({ question, timeLeft, phase, ack, onSub
         })}
       </div>
 
-      {/* Multi-select submit button */}
-      {question.question_type === "multi" && phase === "question" && (
-        <button
-          onClick={submitMulti}
-          disabled={selected.size === 0}
-          className="w-full py-4 bg-white text-black font-extrabold text-xl rounded-2xl disabled:opacity-30 transition-all active:scale-95"
-        >
-          SUBMIT ({selected.size} selected)
-        </button>
-      )}
     </div>
   );
 }

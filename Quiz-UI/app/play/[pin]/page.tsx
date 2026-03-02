@@ -15,6 +15,7 @@ interface QuestionData {
   question_text: string;
   question_type: "single" | "multi";
   time_limit: number;
+  correct_count: number;
   answers: AnswerOption[];
 }
 interface LeaderboardEntry { rank: number; nickname: string; score: number; }
@@ -87,6 +88,7 @@ function PlayerGame({ pin }: { pin: string }) {
             question_text: msg.question_text,
             question_type: msg.question_type,
             time_limit: msg.time_limit,
+            correct_count: msg.correct_count ?? 1,
             answers: msg.answers,
           });
           setQuestionNum((msg.question_index ?? 0) + 1);
