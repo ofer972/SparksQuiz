@@ -16,6 +16,7 @@ interface QuestionData {
   question_type: "single" | "multi";
   time_limit: number;
   correct_count: number;
+  icon_set: string;
   answers: AnswerOption[];
 }
 interface LeaderboardEntry { rank: number; nickname: string; score: number; }
@@ -89,6 +90,7 @@ function PlayerGame({ pin }: { pin: string }) {
             question_type: msg.question_type,
             time_limit: msg.time_limit,
             correct_count: msg.correct_count ?? 1,
+            icon_set: msg.icon_set ?? "elements",
             answers: msg.answers,
           });
           setQuestionNum((msg.question_index ?? 0) + 1);
@@ -251,6 +253,7 @@ function PlayerGame({ pin }: { pin: string }) {
           phase={phase}
           ack={ack}
           onSubmit={handleSubmit}
+          iconSet={question.icon_set}
         />
       )}
 

@@ -10,12 +10,21 @@ interface Props {
   phase: "question" | "answered";
   ack: AckData | null;
   onSubmit: (ids: number[]) => void;
+  iconSet?: string;
 }
 
 const COLORS = ["btn-red", "btn-blue", "btn-yellow", "btn-green"];
-const SHAPES = ["♥", "♠", "♦", "♣"];
 
-export default function PlayerController({ question, timeLeft, phase, ack, onSubmit }: Props) {
+const ICON_SETS: Record<string, string[]> = {
+  elements:  ["🔥", "💧", "⚡", "🌿"],
+  suits:     ["♥",  "♠",  "♦",  "♣" ],
+  shapes:    ["▲",  "◆",  "●",  "■" ],
+  celestial: ["☀️", "🌙", "⭐", "🌍"],
+  faces:     ["😎", "🤔", "😄", "🤩"],
+};
+
+export default function PlayerController({ question, timeLeft, phase, ack, onSubmit, iconSet = "elements" }: Props) {
+  const shapes = ICON_SETS[iconSet] ?? ICON_SETS.elements;
   const [selected, setSelected] = useState<Set<number>>(new Set());
 
   const needed = question.question_type === "multi" ? question.correct_count : 1;
@@ -109,7 +118,7 @@ export default function PlayerController({ question, timeLeft, phase, ack, onSub
                 min-h-[80px] md:min-h-[64px]
               `}
             >
-              <span className="text-4xl leading-none">{SHAPES[i % 4]}</span>
+              <span className="text-4xl leading-none">{shapes[i % 4]}</span>
               <span className="text-center">{a.text}</span>
             </button>
           );

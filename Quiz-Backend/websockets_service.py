@@ -68,7 +68,8 @@ async def host_ws(websocket: WebSocket, pin: str):
                     logger.warning(f"⚠️  START_GAME  pin={pin}  reason=no_questions")
                     await manager.send_host(pin, {"type": "error", "message": "Quiz has no questions"})
                     continue
-                logger.info(f"🎮 START_GAME  pin={pin}  questions={len(room.questions)}  players={len(room.registered_nicknames)}")
+                room.icon_set = msg.get("icon_set", "elements")
+                logger.info(f"🎮 START_GAME  pin={pin}  questions={len(room.questions)}  players={len(room.registered_nicknames)}  icon_set={room.icon_set}")
                 _update_status(pin, "active")
                 room.current_question_index = 0
                 await manager.start_question(pin, room.questions[0])

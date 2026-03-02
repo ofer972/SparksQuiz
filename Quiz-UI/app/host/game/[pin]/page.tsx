@@ -7,6 +7,15 @@ import Podium from "@/components/Podium";
 import Logo from "@/components/Logo";
 
 type GameStatus = "connecting" | "lobby" | "question" | "result" | "leaderboard" | "finished" | "error";
+type IconSetKey = "elements" | "suits" | "shapes" | "celestial" | "faces";
+
+const ICON_SETS: Record<IconSetKey, { label: string; icons: string[] }> = {
+  elements: { label: "Elements",  icons: ["🔥", "💧", "⚡", "🌿"] },
+  suits:    { label: "Card Suits", icons: ["♥",  "♠",  "♦",  "♣"]  },
+  shapes:   { label: "Shapes",    icons: ["▲",  "◆",  "●",  "■"]  },
+  celestial:{ label: "Celestial", icons: ["☀️", "🌙", "⭐", "🌍"] },
+  faces:    { label: "Faces",     icons: ["😎", "🤔", "😄", "🤩"] },
+};
 
 interface Player { nickname: string; }
 interface LeaderboardEntry { rank: number; nickname: string; score: number; }
@@ -35,6 +44,7 @@ export default function HostGamePage({ params }: { params: Promise<{ pin: string
   const [wsError, setWsError] = useState("");
   const [questionNum, setQuestionNum] = useState(0);
   const [totalQuestions, setTotalQuestions] = useState(0);
+  const [selectedIconSet, setSelectedIconSet] = useState<IconSetKey>("elements");
   const autoNextRef = useRef(false);   // when true, jump to next question as soon as leaderboard arrives
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const connectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -172,7 +182,7 @@ export default function HostGamePage({ params }: { params: Promise<{ pin: string
   }, [pin]);
 
   const kickPlayer = (nickname: string) => send({ action: "kick", nickname });
-  const startGame = () => send({ action: "start_game" });
+  const startGame = () => send({ action: "start_game", icon_set: selectedIconSet });
   // "next_question" tells backend to end the current question and broadcast show_results
   const endQuestion = () => send({ action: "next_question" });
   const showLeaderboard = () => send({ action: "show_leaderboard" });
@@ -276,6 +286,35 @@ export default function HostGamePage({ params }: { params: Promise<{ pin: string
               </div>
             )}
           </div>
+          {/* Icon set selector */}
+          <div className="bg-[#16213e] rounded-2xl p-4 mb-4">
+            <p className="text-gray-400 text-sm mb-3 font-semibold uppercase tracking-wider">Answer Icons</p>
+            <div className="grid grid-cols-5 gap-2">
+              {(Object.keys(ICON_SETS) as IconSetKey[]).map((key) => {
+                const set = ICON_SETS[key];
+                const isSelected = selectedIconSet === key;
+                return (
+                  <button
+                    key={key}
+                    onClick={() => setSelectedIconSet(key)}
+                    className={`rounded-xl p-2 flex flex-col items-center gap-1 transition-all border-2 ${
+                      isSelected ? "border-indigo-400 bg-indigo-900/40" : "border-transparent bg-[#0f3460] hover:border-indigo-600"
+                    }`}
+                  >
+                    <div className="grid grid-cols-2 gap-0.5 text-base leading-tight">
+                      {set.icons.map((icon, i) => (
+                        <span key={i} className={`flex items-center justify-center rounded text-sm w-6 h-6 ${
+                          ["btn-red","btn-blue","btn-yellow","btn-green"][i]
+                        }`}>{icon}</span>
+                      ))}
+                    </div>
+                    <span className="text-gray-300 text-xs font-medium">{set.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
           <button
             onClick={startGame}
             disabled={players.length === 0}
@@ -331,7 +370,7 @@ export default function HostGamePage({ params }: { params: Promise<{ pin: string
                   ["btn-red", "btn-blue", "btn-yellow", "btn-green"][i % 4]
                 }`}
               >
-                <span className="text-3xl leading-none">{"♥♠♦♣"[i % 4]}</span>
+                <span className="text-3xl leading-none">{ICON_SETS[selectedIconSet].icons[i % 4]}</span>
                 <span className="text-center">{a.answer_text}</span>
               </div>
             ))}
@@ -368,7 +407,7 @@ export default function HostGamePage({ params }: { params: Promise<{ pin: string
                       : "opacity-40"
                   } ${["btn-red", "btn-blue", "btn-yellow", "btn-green"][i % 4]}`}
                 >
-                  <span className="text-3xl leading-none">{"♥♠♦♣"[i % 4]}</span>
+                  <span className="text-3xl leading-none">{ICON_SETS[selectedIconSet].icons[i % 4]}</span>
                   <span className="text-center">{correctIds.includes(a.id) && "✓ "}{a.answer_text}</span>
                 </div>
               ))}

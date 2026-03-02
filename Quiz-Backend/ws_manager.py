@@ -32,6 +32,7 @@ class RoomState:
     current_answers: dict[str, set[int]] = field(default_factory=dict)
     # snapshotted at question start so disconnect doesn't change denominator
     total_players_at_question_start: int = 0
+    icon_set: str = "elements"
 
 
 class ConnectionManager:
@@ -157,6 +158,7 @@ class ConnectionManager:
             "question_type": question["question_type"],
             "time_limit": question["time_limit"],
             "correct_count": correct_count,
+            "icon_set": room.icon_set,
             "answers": [{"id": a["id"], "text": a["answer_text"]} for a in question["answers"]],
             "timestamp": room.question_start_time,
         }
@@ -294,6 +296,7 @@ class ConnectionManager:
                 await self._send(ws, {"type": "answer_ack", "correct": is_correct, "points": 0})
             else:
                 # Not yet answered — let them answer with the remaining time
+                correct_count = sum(1 for a in q["answers"] if a["is_correct"])
                 await self._send(ws, {
                     "type": "question_start",
                     "question_index": room.current_question_index,
@@ -301,6 +304,8 @@ class ConnectionManager:
                     "question_text": q["question_text"],
                     "question_type": q["question_type"],
                     "time_limit": room.current_question_time_limit,
+                    "correct_count": correct_count,
+                    "icon_set": room.icon_set,
                     "time_elapsed": round(elapsed, 2),
                     "answers": [{"id": a["id"], "text": a["answer_text"]} for a in q["answers"]],
                     "timestamp": room.question_start_time,
