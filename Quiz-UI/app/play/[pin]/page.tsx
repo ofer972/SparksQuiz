@@ -40,6 +40,7 @@ function PlayerGame({ pin }: { pin: string }) {
   const [totalQuestions, setTotalQuestions] = useState(0);
   const [wsError, setWsError] = useState("");
   const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const heartbeatRef = useRef<NodeJS.Timeout | null>(null);
 
   const send = useCallback((msg: object) => {
     wsRef.current?.send(JSON.stringify(msg));
@@ -68,7 +69,12 @@ function PlayerGame({ pin }: { pin: string }) {
     const ws = new WebSocket(`${WS_URL}/ws/player/${pin}/${encodeURIComponent(nickname)}`);
     wsRef.current = ws;
 
-    ws.onopen = () => setPhase("connecting");
+    ws.onopen = () => {
+      setPhase("connecting");
+      heartbeatRef.current = setInterval(() => {
+        if (ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify({ action: "ping" }));
+      }, 30_000);
+    };
 
     ws.onmessage = (e) => {
       const msg = JSON.parse(e.data);
@@ -131,6 +137,7 @@ function PlayerGame({ pin }: { pin: string }) {
     return () => {
       ws.close();
       if (timerRef.current) clearInterval(timerRef.current);
+      if (heartbeatRef.current) clearInterval(heartbeatRef.current);
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pin, nickname]);

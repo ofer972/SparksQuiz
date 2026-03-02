@@ -55,7 +55,10 @@ async def host_ws(websocket: WebSocket, pin: str):
             action = msg.get("action")
             logger.info(f"📨 WS HOST MSG  pin={pin}  action={action}  room_status={room.status}")
 
-            if action == "kick" and room.status == "lobby":
+            if action == "ping":
+                await manager.send_host(pin, {"type": "pong"})
+
+            elif action == "kick" and room.status == "lobby":
                 nickname = msg.get("nickname", "")
                 logger.info(f"🦵 KICK  pin={pin}  nickname={nickname}")
                 await manager.kick_player(pin, nickname)
@@ -153,7 +156,12 @@ async def player_ws(websocket: WebSocket, pin: str, nickname: str):
             msg = json.loads(raw)
             action = msg.get("action")
 
-            if action == "submit_answer" and room.status == "question":
+            if action == "ping":
+                ws = room.player_connections.get(nickname)
+                if ws:
+                    await manager._send(ws, {"type": "pong"})
+
+            elif action == "submit_answer" and room.status == "question":
                 q_idx = room.current_question_index
                 answer_ids = msg.get("answer_ids", [])
                 logger.info(f"📝 ANSWER  pin={pin}  nickname={nickname}  q_idx={q_idx}  answer_ids={answer_ids}")

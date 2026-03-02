@@ -38,6 +38,7 @@ export default function HostGamePage({ params }: { params: Promise<{ pin: string
   const autoNextRef = useRef(false);   // when true, jump to next question as soon as leaderboard arrives
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const connectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const heartbeatRef = useRef<NodeJS.Timeout | null>(null);
   const [connectTimedOut, setConnectTimedOut] = useState(false);
 
   const updateStatus = (s: GameStatus) => {
@@ -82,6 +83,9 @@ export default function HostGamePage({ params }: { params: Promise<{ pin: string
       if (connectTimeoutRef.current) clearTimeout(connectTimeoutRef.current);
       setWsError("");
       updateStatus("lobby");
+      heartbeatRef.current = setInterval(() => {
+        if (ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify({ action: "ping" }));
+      }, 30_000);
     };
 
     ws.onmessage = (e) => {
@@ -144,6 +148,7 @@ export default function HostGamePage({ params }: { params: Promise<{ pin: string
       ws.close();
       if (timerRef.current) clearInterval(timerRef.current);
       if (connectTimeoutRef.current) clearTimeout(connectTimeoutRef.current);
+      if (heartbeatRef.current) clearInterval(heartbeatRef.current);
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pin]);
