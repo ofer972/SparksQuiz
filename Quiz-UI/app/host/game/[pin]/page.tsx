@@ -215,38 +215,45 @@ export default function HostGamePage({ params }: { params: Promise<{ pin: string
   const displayJoinUrlText = displayJoinUrl.replace(/^https?:\/\//, "");
 
   return (
-    <div className="min-h-screen p-6 max-w-3xl mx-auto">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-3">
+    <div className="min-h-screen p-6 max-w-4xl mx-auto">
+      {/* Row: left = SparksQuiz + PIN + URL; right = status badge next to QR code */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start mb-6">
+        <div className="flex items-start gap-3 min-w-0">
           <Logo size="xxl" iconOnly />
-          <div>
-            <h1 className="text-4xl font-extrabold leading-none">
+          <div className="min-w-0">
+            <h1 className={`font-extrabold leading-none ${status === "lobby" ? "text-5xl" : "text-4xl"}`}>
               Sparks<span className="text-yellow-400">Quiz</span>
-              <span className="text-gray-400 font-normal text-2xl ml-4">PIN: </span>
-              <span className="text-yellow-400 tracking-widest text-4xl font-extrabold">{pin}</span>
             </h1>
-            <p className="text-gray-300 text-2xl mt-2">
-              Players join at:{" "}
-              <a href={displayJoinUrl} className="text-indigo-400 underline font-semibold text-3xl" target="_blank" rel="noreferrer">
-                {displayJoinUrlText}
-              </a>
-            </p>
-            <div className="mt-4 flex justify-center">
-              <div className="bg-white p-4 rounded-2xl inline-block">
-                <QRCodeSVG value={displayJoinUrl} size={324} level="M" />
-              </div>
+            <div className="mt-2">
+              <p className={`text-gray-400 font-normal ${status === "lobby" ? "text-2xl" : "text-xl"}`}>
+                PIN: <span className={`text-yellow-400 tracking-widest font-extrabold ${status === "lobby" ? "text-3xl" : "text-2xl"}`}>{pin}</span>
+              </p>
+              <p className={`text-gray-300 mt-1 ${status === "lobby" ? "text-2xl" : "text-xl"}`}>
+                Players join at:{" "}
+                <a href={displayJoinUrl} className={`text-indigo-400 underline font-semibold break-all ${status === "lobby" ? "text-3xl" : "text-2xl"}`} target="_blank" rel="noreferrer">
+                  {displayJoinUrlText}
+                </a>
+              </p>
             </div>
           </div>
         </div>
-        <div className={`px-4 py-1.5 rounded-full text-sm font-bold uppercase tracking-wider ${
-          status === "lobby" ? "bg-blue-700 text-blue-100" :
-          status === "question" ? "bg-green-700 text-green-100" :
-          status === "finished" ? "bg-gray-700 text-gray-300" :
-          status === "error" ? "bg-red-700 text-red-100" :
-          "bg-yellow-700 text-yellow-100"
-        }`}>
-          {status}
+        <div className="flex justify-center md:justify-end items-center gap-4 flex-wrap">
+          <div className={`px-4 py-1.5 rounded-full text-sm font-bold uppercase tracking-wider flex-shrink-0 ${
+            status === "lobby" ? "bg-blue-700 text-blue-100" :
+            status === "question" ? "bg-green-700 text-green-100" :
+            status === "finished" ? "bg-gray-700 text-gray-300" :
+            status === "error" ? "bg-red-700 text-red-100" :
+            "bg-yellow-700 text-yellow-100"
+          }`}>
+            {status}
+          </div>
+          <div className="bg-white p-4 rounded-2xl">
+            <QRCodeSVG
+              value={displayJoinUrl}
+              size={status !== "connecting" && status !== "lobby" ? 135 : 292}
+              level="M"
+            />
+          </div>
         </div>
       </div>
 
@@ -398,7 +405,7 @@ export default function HostGamePage({ params }: { params: Promise<{ pin: string
                 }`}
               >
                 <span className="text-3xl leading-none">{ICON_SETS[selectedIconSet].icons[i % 4]}</span>
-                <span className="text-center">{a.answer_text}</span>
+                <span className="text-center text-2xl font-semibold">{a.answer_text}</span>
               </div>
             ))}
           </div>
@@ -435,7 +442,7 @@ export default function HostGamePage({ params }: { params: Promise<{ pin: string
                   } ${["btn-red", "btn-blue", "btn-yellow", "btn-green"][i % 4]}`}
                 >
                   <span className="text-3xl leading-none">{ICON_SETS[selectedIconSet].icons[i % 4]}</span>
-                  <span className="text-center">{correctIds.includes(a.id) && "✓ "}{a.answer_text}</span>
+                  <span className="text-center text-2xl font-semibold">{correctIds.includes(a.id) && "✓ "}{a.answer_text}</span>
                 </div>
               ))}
             </div>
