@@ -9,3 +9,4 @@ websockets
 PyJWT
 resend
 requests
+openpyxl

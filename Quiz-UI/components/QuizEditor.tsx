@@ -166,19 +166,29 @@ export default function QuizEditor({ quizId }: { quizId?: number }) {
       </div>
 
       <div className="flex gap-4">
-        {/* Question list sidebar */}
-        <div className="w-48 flex-shrink-0 space-y-2">
-          {questions.map((_, i) => (
+        {/* Question list sidebar — more space, show question text + single/multi */}
+        <div className="w-80 min-w-0 flex-shrink-0 space-y-2">
+          {questions.map((qu, i) => (
             <button
               key={i}
               onClick={() => setActiveQ(i)}
-              className={`w-full text-left px-3 py-2 rounded-xl text-sm font-medium transition-all ${
+              className={`w-full text-left px-3 py-2.5 rounded-xl transition-all ${
                 i === activeQ
                   ? "bg-indigo-600 text-white"
                   : "bg-[#16213e] text-gray-400 hover:bg-[#1e2d50]"
               }`}
             >
-              Q{i + 1}
+              <span className="text-sm font-medium opacity-80">Q{i + 1}</span>
+              <span className="block text-sm mt-0.5 line-clamp-2 leading-snug">
+                {qu.question_text.trim() || "Untitled question"}
+              </span>
+              <span className={`inline-block mt-1.5 text-xs font-medium px-1.5 py-0.5 rounded ${
+                qu.question_type === "multi"
+                  ? "bg-amber-600/30 text-amber-200"
+                  : "bg-slate-500/30 text-slate-300"
+              }`}>
+                {qu.question_type === "single" ? "Single" : "Multi"}
+              </span>
             </button>
           ))}
           <button
@@ -191,7 +201,7 @@ export default function QuizEditor({ quizId }: { quizId?: number }) {
 
         {/* Active question editor */}
         {q && (
-          <div className="flex-1 bg-[#16213e] rounded-2xl p-5 space-y-4">
+          <div className="flex-1 min-w-0 bg-[#16213e] rounded-2xl p-5 space-y-4">
             <div className="flex items-center justify-between">
               <h3 className="text-white font-semibold text-lg">Question {activeQ + 1}</h3>
               {questions.length > 1 && (
@@ -208,7 +218,7 @@ export default function QuizEditor({ quizId }: { quizId?: number }) {
               value={q.question_text}
               onChange={(e) => setQuestion(activeQ, { question_text: e.target.value })}
               placeholder="Enter your question..."
-              rows={4}
+              rows={3}
               className="w-full bg-[#0f3460] text-white rounded-xl px-4 py-3 placeholder-gray-500 outline-none focus:ring-2 focus:ring-indigo-500 resize-none text-lg"
             />
 
@@ -246,14 +256,14 @@ export default function QuizEditor({ quizId }: { quizId?: number }) {
                   ? "Click an answer to mark it correct"
                   : "Click answers to mark correct (multiple allowed)"}
               </p>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="flex flex-col gap-3">
                 {q.answers.map((a, ai) => (
-                  <div key={ai} className="flex items-start gap-2">
+                  <div key={ai} className="flex items-center gap-3">
                     <button
                       onClick={() => toggleCorrect(activeQ, ai)}
-                      className={`w-8 h-8 mt-1 rounded-full flex-shrink-0 font-bold text-white text-sm transition-all ${
+                      className={`w-9 h-9 rounded-full flex-shrink-0 font-bold text-white text-sm transition-all ${
                         ANSWER_COLORS[ai % 4]
-                      } ${a.is_correct ? "ring-4 ring-white scale-110" : "opacity-70"}`}
+                      } ${a.is_correct ? "ring-2 ring-white scale-105" : "opacity-70"}`}
                     >
                       {ANSWER_LABELS[ai % 4]}
                     </button>
@@ -267,7 +277,7 @@ export default function QuizEditor({ quizId }: { quizId?: number }) {
                     {q.answers.length > 2 && (
                       <button
                         onClick={() => removeAnswer(activeQ, ai)}
-                        className="text-gray-500 hover:text-red-400 text-lg leading-none mt-1"
+                        className="text-gray-500 hover:text-red-400 text-lg leading-none flex-shrink-0"
                       >
                         &times;
                       </button>
