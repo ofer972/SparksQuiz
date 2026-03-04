@@ -52,6 +52,7 @@ export default function HostGamePage({ params }: { params: Promise<{ pin: string
   const heartbeatRef = useRef<NodeJS.Timeout | null>(null);
   const [connectTimedOut, setConnectTimedOut] = useState(false);
   const [shortJoinUrl, setShortJoinUrl] = useState<string | null>(null);
+  const hadConnectionRef = useRef(false);
 
   const updateStatus = (s: GameStatus) => {
     statusRef.current = s;
@@ -107,11 +108,13 @@ export default function HostGamePage({ params }: { params: Promise<{ pin: string
       switch (msg.type) {
         case "lobby_update":
           setPlayers((msg.players as string[]).map((n) => ({ nickname: n })));
+          hadConnectionRef.current = true;
           // Only switch to lobby if we're still in the initial connecting phase.
           // Mid-game lobby_updates (player join/drop) must not reset the host UI.
           if (statusRef.current === "connecting") updateStatus("lobby");
           break;
         case "question_start":
+          hadConnectionRef.current = true;
           setQuestion({ question_text: msg.question_text, question_type: msg.question_type, time_limit: msg.time_limit, answers: msg.answers });
           setProgress({ answered: msg.answered ?? 0, total: msg.total ?? 0 });
           setQuestionNum((msg.question_index ?? 0) + 1);
@@ -154,7 +157,11 @@ export default function HostGamePage({ params }: { params: Promise<{ pin: string
 
     ws.onclose = () => {
       if (heartbeatRef.current) { clearInterval(heartbeatRef.current); heartbeatRef.current = null; }
-      if (statusRef.current !== "finished") updateStatus("connecting");
+      if (statusRef.current !== "finished") {
+        updateStatus("connecting");
+        // Try to reconnect after a short delay (e.g. network blip, backend restart)
+        setTimeout(() => connectWs(), 2000);
+      }
     };
   }, [pin, send]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -270,7 +277,9 @@ export default function HostGamePage({ params }: { params: Promise<{ pin: string
           ) : (
             <>
               <div className="text-4xl animate-spin mb-4">⚡</div>
-              <p className="text-gray-400">Connecting to game room...</p>
+              <p className="text-gray-400">
+                {hadConnectionRef.current ? "Connection lost. Reconnecting..." : "Connecting to game room..."}
+              </p>
             </>
           )}
         </div>
