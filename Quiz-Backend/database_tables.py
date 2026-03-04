@@ -43,6 +43,7 @@ def initialize_tables(engine):
                 quiz_id                INTEGER REFERENCES quizzes(id) ON DELETE CASCADE,
                 status                 VARCHAR(20) DEFAULT 'lobby',
                 current_question_index INTEGER DEFAULT 0,
+                short_join_url         VARCHAR(512),
                 created_at             TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         """))

@@ -73,6 +73,7 @@ async def lifespan(app: FastAPI):
         "DEFAULT_HOST_EMAIL":  os.getenv("DEFAULT_HOST_EMAIL",  "(not set)"),
         "RESEND_API_KEY":      _mask(os.getenv("RESEND_API_KEY", "")) if os.getenv("RESEND_API_KEY") else "(not set)",
         "JWT_SECRET":          _mask(os.getenv("JWT_SECRET",    "")) if os.getenv("JWT_SECRET") else "(not set)",
+        "TINYURL_API_TOKEN":   _mask(os.getenv("TINYURL_API_TOKEN", "")) if os.getenv("TINYURL_API_TOKEN") else "(not set)",
         "PORT":                os.getenv("PORT",                "(not set)"),
     }
     logger.info("📋 Environment variables:")

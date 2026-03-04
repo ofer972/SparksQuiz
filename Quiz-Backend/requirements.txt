@@ -8,3 +8,4 @@ pydantic-settings
 websockets
 PyJWT
 resend
+requests

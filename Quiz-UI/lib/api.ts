@@ -62,6 +62,7 @@ export interface GameSession {
   quiz_id: number;
   status: string;
   current_question_index: number;
+  short_join_url?: string | null;
 }
 
 export interface LeaderboardEntry {
@@ -85,5 +86,7 @@ export const deleteQuiz = (id: number) =>
 
 export const createSession = (quiz_id: number) =>
   apiFetch<GameSession>("/api/game/session", { method: "POST", body: JSON.stringify({ quiz_id }) });
+export const getSession = (pin: string) =>
+  apiFetch<GameSession>(`/api/game/session/${pin}`);
 export const joinSession = (pin: string, nickname: string) =>
   apiFetch<{ ok: boolean }>(`/api/game/session/${pin}/join?nickname=${encodeURIComponent(nickname)}`, { method: "POST" });

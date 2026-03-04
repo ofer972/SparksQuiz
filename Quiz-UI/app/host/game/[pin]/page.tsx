@@ -1,10 +1,11 @@
 "use client";
 
 import { use, useCallback, useEffect, useRef, useState } from "react";
-import { WS_URL } from "@/lib/api";
+import { WS_URL, getSession } from "@/lib/api";
 import Leaderboard from "@/components/Leaderboard";
 import Podium from "@/components/Podium";
 import Logo from "@/components/Logo";
+import { QRCodeSVG } from "qrcode.react";
 
 type GameStatus = "connecting" | "lobby" | "question" | "result" | "leaderboard" | "finished" | "error";
 type IconSetKey = "elements" | "suits" | "shapes" | "celestial" | "faces";
@@ -50,6 +51,7 @@ export default function HostGamePage({ params }: { params: Promise<{ pin: string
   const connectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const heartbeatRef = useRef<NodeJS.Timeout | null>(null);
   const [connectTimedOut, setConnectTimedOut] = useState(false);
+  const [shortJoinUrl, setShortJoinUrl] = useState<string | null>(null);
 
   const updateStatus = (s: GameStatus) => {
     statusRef.current = s;
@@ -181,6 +183,15 @@ export default function HostGamePage({ params }: { params: Promise<{ pin: string
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pin]);
 
+  // Fetch session to get short_join_url (persisted in DB; works after refresh)
+  useEffect(() => {
+    getSession(pin)
+      .then((s) => {
+        if (s.short_join_url) setShortJoinUrl(s.short_join_url);
+      })
+      .catch(() => {});
+  }, [pin]);
+
   const kickPlayer = (nickname: string) => send({ action: "kick", nickname });
   const startGame = () => send({ action: "start_game", icon_set: selectedIconSet });
   // "next_question" tells backend to end the current question and broadcast show_results
@@ -190,9 +201,11 @@ export default function HostGamePage({ params }: { params: Promise<{ pin: string
   // Show leaderboard to players then immediately advance to the next question
   const skipToNext = () => { autoNextRef.current = true; send({ action: "show_leaderboard" }); };
 
-  const playerJoinUrl = typeof window !== "undefined"
+  const longJoinUrl = typeof window !== "undefined"
     ? `${window.location.origin}/play/${pin}`
     : `/play/${pin}`;
+  const displayJoinUrl = shortJoinUrl ?? longJoinUrl;
+  const displayJoinUrlText = displayJoinUrl.replace(/^https?:\/\//, "");
 
   return (
     <div className="min-h-screen p-6 max-w-3xl mx-auto">
@@ -206,12 +219,17 @@ export default function HostGamePage({ params }: { params: Promise<{ pin: string
               <span className="text-gray-400 font-normal text-2xl ml-4">PIN: </span>
               <span className="text-yellow-400 tracking-widest text-4xl font-extrabold">{pin}</span>
             </h1>
-            <p className="text-gray-300 text-xl mt-2">
+            <p className="text-gray-300 text-2xl mt-2">
               Players join at:{" "}
-              <a href={playerJoinUrl} className="text-indigo-400 underline font-semibold" target="_blank" rel="noreferrer">
-                {playerJoinUrl}
+              <a href={displayJoinUrl} className="text-indigo-400 underline font-semibold text-3xl" target="_blank" rel="noreferrer">
+                {displayJoinUrlText}
               </a>
             </p>
+            <div className="mt-4 flex justify-center">
+              <div className="bg-white p-4 rounded-2xl inline-block">
+                <QRCodeSVG value={displayJoinUrl} size={324} level="M" />
+              </div>
+            </div>
           </div>
         </div>
         <div className={`px-4 py-1.5 rounded-full text-sm font-bold uppercase tracking-wider ${

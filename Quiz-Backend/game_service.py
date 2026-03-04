@@ -1,3 +1,5 @@
+import os
+
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.engine import Connection
 
@@ -7,10 +9,12 @@ from database_game import (
     get_session_by_pin,
     create_game_session,
     create_player,
+    update_session_short_join_url,
 )
 from database_quiz import get_quiz_by_id
 from game_schemas import GameSessionCreate
 from pin import generate_pin
+from short_url import get_short_url
 from ws_manager import manager
 
 router = APIRouter(prefix="/api/game", tags=["game"])
@@ -32,6 +36,13 @@ def create_session(payload: GameSessionCreate, conn: Connection = Depends(get_db
             raise HTTPException(503, "Could not generate a unique PIN, try again")
 
     session = create_game_session(conn, payload.quiz_id, pin)
+    app_url = os.getenv("APP_URL", "").rstrip("/")
+    if app_url:
+        long_join_url = f"{app_url}/play/{pin}"
+        short_url = get_short_url(long_join_url)
+        if short_url:
+            update_session_short_join_url(conn, session["id"], short_url)
+            session["short_join_url"] = short_url
     conn.commit()
 
     manager.create_room(pin, payload.quiz_id, session["id"])

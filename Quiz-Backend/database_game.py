@@ -27,10 +27,17 @@ def create_game_session(conn: Connection, quiz_id: int, pin: str) -> dict:
 
 def get_session_by_pin(conn: Connection, pin: str) -> dict | None:
     row = conn.execute(
-        text("SELECT id, pin, quiz_id, status, current_question_index FROM game_sessions WHERE pin = :pin"),
+        text("SELECT id, pin, quiz_id, status, current_question_index, short_join_url FROM game_sessions WHERE pin = :pin"),
         {"pin": pin},
     ).fetchone()
     return dict(row._mapping) if row else None
+
+
+def update_session_short_join_url(conn: Connection, session_id: int, short_join_url: str) -> None:
+    conn.execute(
+        text("UPDATE game_sessions SET short_join_url = :url WHERE id = :id"),
+        {"url": short_join_url, "id": session_id},
+    )
 
 
 def create_player(conn: Connection, session_id: int, nickname: str) -> int:
