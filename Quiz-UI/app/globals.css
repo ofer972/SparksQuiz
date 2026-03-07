@@ -12,6 +12,13 @@ body {
   min-height: 100vh;
 }
 
+/* Safe area for notched devices (mobile) */
+.safe-area-padding {
+  padding-left: env(safe-area-inset-left, 0);
+  padding-right: env(safe-area-inset-right, 0);
+  padding-bottom: env(safe-area-inset-bottom, 0);
+}
+
 /* Answer button colors */
 .btn-red    { background: #e21b3c; }
 .btn-blue   { background: #1368ce; }

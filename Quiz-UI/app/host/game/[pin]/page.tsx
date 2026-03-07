@@ -53,6 +53,14 @@ export default function HostGamePage({ params }: { params: Promise<{ pin: string
   const [connectTimedOut, setConnectTimedOut] = useState(false);
   const [shortJoinUrl, setShortJoinUrl] = useState<string | null>(null);
   const hadConnectionRef = useRef(false);
+  const [isNarrow, setIsNarrow] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 640px)");
+    const update = () => setIsNarrow(mq.matches);
+    update();
+    mq.addEventListener("change", update);
+    return () => mq.removeEventListener("change", update);
+  }, []);
 
   const updateStatus = (s: GameStatus) => {
     statusRef.current = s;
@@ -215,30 +223,30 @@ export default function HostGamePage({ params }: { params: Promise<{ pin: string
   const displayJoinUrlText = displayJoinUrl.replace(/^https?:\/\//, "");
 
   return (
-    <div className="min-h-screen p-6 max-w-4xl mx-auto">
+    <div className="min-h-screen p-3 sm:p-6 max-w-4xl mx-auto overflow-x-hidden">
       {/* Row: left = SparksQuiz + PIN + URL; right = status badge next to QR code */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start mb-6">
-        <div className="flex items-start gap-3 min-w-0">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 items-start mb-4 sm:mb-6">
+        <div className="flex items-start gap-2 sm:gap-3 min-w-0">
           <Logo size="xxl" iconOnly />
-          <div className="min-w-0">
-            <h1 className={`font-extrabold leading-none ${status === "lobby" ? "text-5xl" : "text-4xl"}`}>
+          <div className="min-w-0 flex-1">
+            <h1 className={`font-extrabold leading-tight ${status === "lobby" ? "text-2xl sm:text-4xl md:text-5xl" : "text-xl sm:text-3xl md:text-4xl"}`}>
               Sparks<span className="text-yellow-400">Quiz</span>
             </h1>
-            <div className="mt-2">
-              <p className={`text-gray-400 font-normal ${status === "lobby" ? "text-2xl" : "text-xl"}`}>
-                PIN: <span className={`text-yellow-400 tracking-widest font-extrabold ${status === "lobby" ? "text-3xl" : "text-2xl"}`}>{pin}</span>
+            <div className="mt-1 sm:mt-2">
+              <p className={`text-gray-400 font-normal ${status === "lobby" ? "text-base sm:text-xl md:text-2xl" : "text-sm sm:text-lg md:text-xl"}`}>
+                PIN: <span className={`text-yellow-400 tracking-widest font-extrabold ${status === "lobby" ? "text-xl sm:text-2xl md:text-3xl" : "text-lg sm:text-xl md:text-2xl"}`}>{pin}</span>
               </p>
-              <p className={`text-gray-300 mt-1 ${status === "lobby" ? "text-2xl" : "text-xl"}`}>
+              <p className={`text-gray-300 mt-0.5 sm:mt-1 ${status === "lobby" ? "text-sm sm:text-xl md:text-2xl" : "text-xs sm:text-lg md:text-xl"}`}>
                 Players join at:{" "}
-                <a href={displayJoinUrl} className={`text-indigo-400 underline font-semibold break-all ${status === "lobby" ? "text-3xl" : "text-2xl"}`} target="_blank" rel="noreferrer">
+                <a href={displayJoinUrl} className={`text-indigo-400 underline font-semibold break-all ${status === "lobby" ? "text-base sm:text-2xl md:text-3xl" : "text-sm sm:text-xl md:text-2xl"}`} target="_blank" rel="noreferrer">
                   {displayJoinUrlText}
                 </a>
               </p>
             </div>
           </div>
         </div>
-        <div className="flex justify-center md:justify-end items-center gap-4 flex-wrap">
-          <div className={`px-4 py-1.5 rounded-full text-sm font-bold uppercase tracking-wider flex-shrink-0 ${
+        <div className="flex justify-center md:justify-end items-center gap-3 sm:gap-4 flex-wrap">
+          <div className={`px-3 sm:px-4 py-1.5 rounded-full text-xs sm:text-sm font-bold uppercase tracking-wider flex-shrink-0 ${
             status === "lobby" ? "bg-blue-700 text-blue-100" :
             status === "question" ? "bg-green-700 text-green-100" :
             status === "finished" ? "bg-gray-700 text-gray-300" :
@@ -247,10 +255,10 @@ export default function HostGamePage({ params }: { params: Promise<{ pin: string
           }`}>
             {status}
           </div>
-          <div className="bg-white p-4 rounded-2xl">
+          <div className="bg-white p-2 sm:p-4 rounded-xl sm:rounded-2xl">
             <QRCodeSVG
               value={displayJoinUrl}
-              size={status !== "connecting" && status !== "lobby" ? 135 : 292}
+              size={status !== "connecting" && status !== "lobby" ? (isNarrow ? 100 : 135) : (isNarrow ? 140 : 292)}
               level="M"
             />
           </div>
@@ -258,9 +266,9 @@ export default function HostGamePage({ params }: { params: Promise<{ pin: string
       </div>
 
       {wsError && (
-        <div className="bg-red-900/50 border border-red-500 rounded-xl p-4 mb-4 text-red-300 text-sm">
+        <div className="bg-red-900/50 border border-red-500 rounded-xl p-3 sm:p-4 mb-3 sm:mb-4 text-red-300 text-xs sm:text-sm">
           {wsError}
-          <div className="mt-2 font-mono text-xs opacity-70">
+          <div className="mt-2 font-mono text-xs opacity-70 break-all">
             Tried: {WS_URL}/ws/host/{pin}
           </div>
         </div>
@@ -268,23 +276,23 @@ export default function HostGamePage({ params }: { params: Promise<{ pin: string
 
       {/* CONNECTING */}
       {status === "connecting" && !wsError && (
-        <div className="text-center mt-20">
+        <div className="text-center mt-12 sm:mt-20 px-2">
           {connectTimedOut ? (
             <>
-              <div className="text-5xl mb-4">⚠️</div>
-              <p className="text-white text-lg font-semibold mb-2">Could not connect to the game room</p>
-              <p className="text-gray-400 text-sm mb-6">The session may have expired or the backend is unreachable.</p>
+              <div className="text-4xl sm:text-5xl mb-3 sm:mb-4">⚠️</div>
+              <p className="text-white text-base sm:text-lg font-semibold mb-2">Could not connect to the game room</p>
+              <p className="text-gray-400 text-xs sm:text-sm mb-4 sm:mb-6">The session may have expired or the backend is unreachable.</p>
               <a
                 href="/host"
-                className="px-6 py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl transition"
+                className="inline-block px-5 py-3 min-h-[48px] bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl transition touch-manipulation"
               >
                 ← Return to Dashboard
               </a>
             </>
           ) : (
             <>
-              <div className="text-4xl animate-spin mb-4">⚡</div>
-              <p className="text-gray-400">
+              <div className="text-3xl sm:text-4xl animate-spin mb-3 sm:mb-4">⚡</div>
+              <p className="text-gray-400 text-sm sm:text-base">
                 {hadConnectionRef.current ? "Connection lost. Reconnecting..." : "Connecting to game room..."}
               </p>
             </>
@@ -295,23 +303,23 @@ export default function HostGamePage({ params }: { params: Promise<{ pin: string
       {/* LOBBY */}
       {status === "lobby" && (
         <div>
-          <div className="bg-[#16213e] rounded-2xl p-5 mb-4">
-            <h2 className="text-white font-semibold mb-3">
+          <div className="bg-[#16213e] rounded-xl sm:rounded-2xl p-4 sm:p-5 mb-3 sm:mb-4">
+            <h2 className="text-white font-semibold text-sm sm:text-base mb-2 sm:mb-3">
               Players in lobby ({players.length})
             </h2>
             {players.length === 0 ? (
-              <p className="text-gray-500 text-sm">Waiting for players...</p>
+              <p className="text-gray-500 text-xs sm:text-sm">Waiting for players...</p>
             ) : (
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                 {players.map((p) => (
                   <div
                     key={p.nickname}
-                    className="flex items-center justify-between bg-[#0f3460] rounded-lg px-3 py-2"
+                    className="flex items-center justify-between bg-[#0f3460] rounded-lg px-2 sm:px-3 py-2 min-h-[44px]"
                   >
-                    <span className="text-white text-sm font-medium truncate">{p.nickname}</span>
+                    <span className="text-white text-xs sm:text-sm font-medium truncate">{p.nickname}</span>
                     <button
                       onClick={() => kickPlayer(p.nickname)}
-                      className="text-red-400 hover:text-red-300 text-xs ml-2 flex-shrink-0"
+                      className="text-red-400 hover:text-red-300 text-xs ml-2 flex-shrink-0 min-h-[36px] min-w-[44px] touch-manipulation"
                     >
                       Kick
                     </button>
@@ -321,9 +329,9 @@ export default function HostGamePage({ params }: { params: Promise<{ pin: string
             )}
           </div>
           {/* Icon set selector */}
-          <div className="bg-[#16213e] rounded-2xl p-4 mb-4">
-            <p className="text-gray-400 text-sm mb-3 font-semibold uppercase tracking-wider">Answer Icons</p>
-            <div className="grid grid-cols-5 gap-2">
+          <div className="bg-[#16213e] rounded-xl sm:rounded-2xl p-3 sm:p-4 mb-3 sm:mb-4">
+            <p className="text-gray-400 text-xs sm:text-sm mb-2 sm:mb-3 font-semibold uppercase tracking-wider">Answer Icons</p>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2">
               {(Object.keys(ICON_SETS) as IconSetKey[]).map((key) => {
                 const set = ICON_SETS[key];
                 const isSelected = selectedIconSet === key;
@@ -331,7 +339,8 @@ export default function HostGamePage({ params }: { params: Promise<{ pin: string
                   <button
                     key={key}
                     onClick={() => setSelectedIconSet(key)}
-                    className={`rounded-xl p-2 flex flex-col items-center gap-1 transition-all border-2 ${
+                    type="button"
+                    className={`rounded-xl p-2 flex flex-col items-center gap-1 transition-all border-2 min-h-[64px] touch-manipulation ${
                       isSelected ? "border-indigo-400 bg-indigo-900/40" : "border-transparent bg-[#0f3460] hover:border-indigo-600"
                     }`}
                   >
@@ -352,7 +361,8 @@ export default function HostGamePage({ params }: { params: Promise<{ pin: string
           <button
             onClick={startGame}
             disabled={players.length === 0}
-            className="w-full py-4 bg-green-600 hover:bg-green-500 disabled:opacity-40 text-white text-xl font-bold rounded-2xl transition-all"
+            type="button"
+            className="w-full py-3 sm:py-4 min-h-[48px] bg-green-600 hover:bg-green-500 disabled:opacity-40 text-white text-base sm:text-xl font-bold rounded-xl sm:rounded-2xl transition-all touch-manipulation"
           >
             Start Game ({players.length} player{players.length !== 1 ? "s" : ""})
           </button>
@@ -361,65 +371,66 @@ export default function HostGamePage({ params }: { params: Promise<{ pin: string
 
       {/* QUESTION */}
       {status === "question" && question && (
-        <div className="space-y-4">
+        <div className="space-y-3 sm:space-y-4">
           {/* Question progress bar */}
           {totalQuestions > 0 && (
             <div>
-              <div className="flex justify-between text-sm text-gray-400 mb-1">
+              <div className="flex justify-between text-xs sm:text-sm text-gray-400 mb-1">
                 <span className="font-semibold text-white">
                   Question {questionNum} <span className="text-gray-400 font-normal">of {totalQuestions}</span>
                 </span>
                 <span>{Math.round((questionNum / totalQuestions) * 100)}%</span>
               </div>
-              <div className="w-full bg-gray-700 rounded-full h-2.5">
+              <div className="w-full bg-gray-700 rounded-full h-2 sm:h-2.5">
                 <div
-                  className="bg-indigo-500 h-2.5 rounded-full transition-all duration-500"
+                  className="bg-indigo-500 h-2 sm:h-2.5 rounded-full transition-all duration-500"
                   style={{ width: `${(questionNum / totalQuestions) * 100}%` }}
                 />
               </div>
             </div>
           )}
-          <div className="bg-[#16213e] rounded-2xl p-5">
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-gray-400 text-sm uppercase tracking-wider">
+          <div className="bg-[#16213e] rounded-xl sm:rounded-2xl p-4 sm:p-5">
+            <div className="flex items-center justify-between mb-2 sm:mb-3 gap-2">
+              <span className="text-gray-400 text-xs sm:text-sm uppercase tracking-wider">
                 {question.question_type === "multi" ? "Multi-select" : "Single choice"}
               </span>
-              <div className={`text-3xl font-bold ${timeLeft <= 5 ? "text-red-400" : "text-yellow-400"}`}>
+              <div className={`text-2xl sm:text-3xl font-bold flex-shrink-0 ${timeLeft <= 5 ? "text-red-400" : "text-yellow-400"}`}>
                 {timeLeft}s
               </div>
             </div>
-            <p className="text-white text-2xl font-semibold">{question.question_text}</p>
+            <p className="text-white text-lg sm:text-2xl font-semibold break-words">{question.question_text}</p>
             {question.question_type === "multi" && (
-              <p className="text-green-400 text-xl font-black mt-3">
+              <p className="text-green-400 text-base sm:text-xl font-black mt-2 sm:mt-3">
                 Select {question.answers.filter((a) => a.is_correct).length} answers
               </p>
             )}
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-2 gap-2 sm:gap-3">
             {question.answers.map((a, i) => (
               <div
                 key={a.id}
-                className={`rounded-xl p-4 text-white font-semibold flex flex-col items-center justify-center gap-2 ${
+                className={`rounded-lg sm:rounded-xl p-3 sm:p-4 min-h-[72px] sm:min-h-0 text-white font-semibold flex flex-col items-center justify-center gap-1 sm:gap-2 ${
                   ["btn-red", "btn-blue", "btn-yellow", "btn-green"][i % 4]
                 }`}
               >
-                <span className="text-3xl leading-none">{ICON_SETS[selectedIconSet].icons[i % 4]}</span>
-                <span className="text-center text-2xl font-semibold">{a.answer_text}</span>
+                <span className="text-xl sm:text-3xl leading-none">{ICON_SETS[selectedIconSet].icons[i % 4]}</span>
+                <span className="text-center text-sm sm:text-2xl font-semibold line-clamp-2 break-words">{a.answer_text}</span>
               </div>
             ))}
           </div>
 
-          <div className="bg-[#16213e] rounded-xl p-4 flex items-center justify-between">
-            <span className="text-gray-400 text-sm">Answers received</span>
-            <span className="text-white font-bold">
+          <div className="bg-[#16213e] rounded-xl p-3 sm:p-4 flex items-center justify-between">
+            <span className="text-gray-400 text-xs sm:text-sm">Answers received</span>
+            <span className="text-white font-bold text-sm sm:text-base">
               {progress.answered} / {progress.total}
             </span>
           </div>
 
           <button
             onClick={endQuestion}
-            className="w-full py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl transition-all"
+            type="button"
+            className="w-full py-3 min-h-[48px] bg-indigo-600 hover:bg-indigo-500 text-white text-base sm:text-lg font-bold rounded-xl transition-all touch-manipulation"
           >
             End Question &amp; Show Results
           </button>
@@ -428,39 +439,41 @@ export default function HostGamePage({ params }: { params: Promise<{ pin: string
 
       {/* RESULT */}
       {status === "result" && question && (
-        <div className="space-y-4">
-          <div className="bg-[#16213e] rounded-2xl p-5">
-            <p className="text-white text-xl font-semibold mb-4">{question.question_text}</p>
-            <div className="grid grid-cols-2 gap-3">
+        <div className="space-y-3 sm:space-y-4">
+          <div className="bg-[#16213e] rounded-xl sm:rounded-2xl p-4 sm:p-5">
+            <p className="text-white text-base sm:text-xl font-semibold mb-3 sm:mb-4 break-words">{question.question_text}</p>
+            <div className="grid grid-cols-2 gap-2 sm:gap-3">
               {question.answers.map((a, i) => (
                 <div
                   key={a.id}
-                  className={`rounded-xl p-4 font-semibold text-white transition-all flex flex-col items-center justify-center gap-2 ${
+                  className={`rounded-lg sm:rounded-xl p-3 sm:p-4 min-h-[64px] font-semibold text-white transition-all flex flex-col items-center justify-center gap-1 sm:gap-2 ${
                     correctIds.includes(a.id)
-                      ? "ring-4 ring-white scale-105 brightness-125"
+                      ? "ring-2 sm:ring-4 ring-white scale-105 brightness-125"
                       : "opacity-40"
                   } ${["btn-red", "btn-blue", "btn-yellow", "btn-green"][i % 4]}`}
                 >
-                  <span className="text-3xl leading-none">{ICON_SETS[selectedIconSet].icons[i % 4]}</span>
-                  <span className="text-center text-2xl font-semibold">{correctIds.includes(a.id) && "✓ "}{a.answer_text}</span>
+                  <span className="text-xl sm:text-3xl leading-none">{ICON_SETS[selectedIconSet].icons[i % 4]}</span>
+                  <span className="text-center text-sm sm:text-2xl font-semibold line-clamp-2">{correctIds.includes(a.id) && "✓ "}{a.answer_text}</span>
                 </div>
               ))}
             </div>
           </div>
-          <div className="bg-[#16213e] rounded-xl p-4">
-            <h3 className="text-white font-semibold mb-2">Top 5</h3>
+          <div className="bg-[#16213e] rounded-xl p-3 sm:p-4">
+            <h3 className="text-white font-semibold text-sm sm:text-base mb-2">Top 5</h3>
             <Leaderboard entries={leaderboard.slice(0, 5)} />
           </div>
-          <div className="flex gap-3">
+          <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
             <button
               onClick={showLeaderboard}
-              className="flex-1 py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl transition-all"
+              type="button"
+              className="flex-1 py-3 min-h-[48px] bg-indigo-600 hover:bg-indigo-500 text-white text-sm sm:text-base font-bold rounded-xl transition-all touch-manipulation"
             >
               Show Leaderboard
             </button>
             <button
               onClick={skipToNext}
-              className="flex-1 py-3 bg-green-600 hover:bg-green-500 text-white font-bold rounded-xl transition-all"
+              type="button"
+              className="flex-1 py-3 min-h-[48px] bg-green-600 hover:bg-green-500 text-white text-sm sm:text-base font-bold rounded-xl transition-all touch-manipulation"
             >
               Next Question →
             </button>
@@ -470,14 +483,15 @@ export default function HostGamePage({ params }: { params: Promise<{ pin: string
 
       {/* LEADERBOARD */}
       {status === "leaderboard" && (
-        <div className="space-y-4">
-          <div className="bg-[#16213e] rounded-2xl p-5">
-            <h2 className="text-white font-semibold text-xl mb-4">Leaderboard</h2>
+        <div className="space-y-3 sm:space-y-4">
+          <div className="bg-[#16213e] rounded-xl sm:rounded-2xl p-4 sm:p-5">
+            <h2 className="text-white font-semibold text-lg sm:text-xl mb-3 sm:mb-4">Leaderboard</h2>
             <Leaderboard entries={leaderboard} />
           </div>
           <button
             onClick={nextQuestion}
-            className="w-full py-3 bg-green-600 hover:bg-green-500 text-white font-bold rounded-xl transition-all"
+            type="button"
+            className="w-full py-3 min-h-[48px] bg-green-600 hover:bg-green-500 text-white font-bold rounded-xl transition-all touch-manipulation"
           >
             Next Question
           </button>
@@ -486,16 +500,16 @@ export default function HostGamePage({ params }: { params: Promise<{ pin: string
 
       {/* FINISHED */}
       {status === "finished" && (
-        <div className="space-y-6">
-          <h2 className="text-3xl font-extrabold text-center text-yellow-400">Game Over!</h2>
+        <div className="space-y-4 sm:space-y-6">
+          <h2 className="text-2xl sm:text-3xl font-extrabold text-center text-yellow-400">Game Over!</h2>
           <Podium entries={leaderboard} />
-          <div className="border-t border-gray-700 pt-4">
-            <h3 className="text-white font-semibold text-lg mb-3">Final Rankings</h3>
+          <div className="border-t border-gray-700 pt-3 sm:pt-4">
+            <h3 className="text-white font-semibold text-base sm:text-lg mb-2 sm:mb-3">Final Rankings</h3>
             <Leaderboard entries={leaderboard} />
           </div>
           <a
             href="/host"
-            className="block w-full text-center py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl transition-all"
+            className="block w-full text-center py-3 min-h-[48px] flex items-center justify-center bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl transition-all touch-manipulation"
           >
             Back to Dashboard
           </a>

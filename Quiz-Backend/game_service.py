@@ -38,6 +38,8 @@ def create_session(payload: GameSessionCreate, conn: Connection = Depends(get_db
     session = create_game_session(conn, payload.quiz_id, pin)
     app_url = os.getenv("APP_URL", "").rstrip("/")
     if app_url:
+        if not app_url.startswith("http://") and not app_url.startswith("https://"):
+            app_url = f"https://{app_url}"
         long_join_url = f"{app_url}/play/{pin}"
         short_url = get_short_url(long_join_url)
         if short_url:

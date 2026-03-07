@@ -64,40 +64,40 @@ export default function HostDashboard() {
   };
 
   return (
-    <div className="min-h-screen p-6 max-w-4xl mx-auto">
-      <div className="flex items-center justify-between mb-8 flex-wrap gap-4">
-        <div className="flex items-center gap-3">
+    <div className="min-h-screen p-3 sm:p-6 max-w-4xl mx-auto overflow-x-hidden">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6 sm:mb-8">
+        <div className="flex items-center gap-2 sm:gap-3 min-w-0">
           <Logo size="xxl" iconOnly />
-          <div>
-            <h1 className="text-3xl font-extrabold leading-none">
+          <div className="min-w-0">
+            <h1 className="text-xl sm:text-3xl font-extrabold leading-tight">
               Sparks<span className="text-yellow-400">Quiz</span>
             </h1>
-            <p className="text-gray-400 text-sm mt-0.5">Host Dashboard</p>
+            <p className="text-gray-400 text-xs sm:text-sm mt-0.5">Host Dashboard</p>
           </div>
         </div>
-        <div className="flex items-center gap-3 flex-wrap">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
           {me && (
-            <span className="text-slate-400 text-sm">
-              Signed in as <span className="text-white font-semibold">{me.name || me.email}</span>
+            <span className="text-slate-400 text-xs sm:text-sm w-full sm:w-auto order-first sm:order-none">
+              Signed in as <span className="text-white font-semibold truncate">{me.name || me.email}</span>
             </span>
           )}
           {me?.is_admin && (
             <Link
               href="/admin"
-              className="px-3 py-1.5 bg-slate-700 hover:bg-slate-600 text-slate-300 text-sm rounded-lg transition"
+              className="px-3 py-2 min-h-[44px] flex items-center bg-slate-700 hover:bg-slate-600 text-slate-300 text-sm rounded-lg transition touch-manipulation"
             >
               Manage Hosts
             </Link>
           )}
           <button
             onClick={handleLogout}
-            className="px-3 py-1.5 bg-slate-700 hover:bg-red-700 text-slate-300 hover:text-white text-sm rounded-lg transition"
+            className="px-3 py-2 min-h-[44px] bg-slate-700 hover:bg-red-700 text-slate-300 hover:text-white text-sm rounded-lg transition touch-manipulation"
           >
             Logout
           </button>
           <Link
             href="/host/quiz/new"
-            className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold rounded-xl transition-all"
+            className="px-4 sm:px-5 py-2.5 min-h-[44px] flex items-center bg-indigo-600 hover:bg-indigo-500 text-white font-semibold rounded-xl transition-all touch-manipulation"
           >
             + New Quiz
           </Link>
@@ -105,9 +105,9 @@ export default function HostDashboard() {
       </div>
 
       {error && (
-        <div className="bg-red-900/50 border border-red-500 rounded-xl p-4 mb-6 text-red-300 text-sm flex items-center justify-between">
-          <span>{error}</span>
-          <button onClick={() => setError("")} className="text-red-400 hover:text-red-200 ml-4">✕</button>
+        <div className="bg-red-900/50 border border-red-500 rounded-xl p-3 sm:p-4 mb-4 sm:mb-6 text-red-300 text-xs sm:text-sm flex items-center justify-between gap-2">
+          <span className="break-words flex-1 min-w-0">{error}</span>
+          <button onClick={() => setError("")} className="text-red-400 hover:text-red-200 flex-shrink-0 min-w-[44px] min-h-[44px] touch-manipulation">✕</button>
         </div>
       )}
 
@@ -121,16 +121,16 @@ export default function HostDashboard() {
           </Link>
         </div>
       ) : (
-        <div className="grid gap-4">
+        <div className="grid gap-3 sm:gap-4">
           {quizzes.map((quiz) => (
             <div
               key={quiz.id}
-              className="bg-[#16213e] rounded-2xl p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow"
+              className="bg-[#16213e] rounded-xl sm:rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 shadow"
             >
-              <div>
-                <h2 className="text-xl font-bold text-white">{quiz.title}</h2>
+              <div className="min-w-0 flex-1">
+                <h2 className="text-base sm:text-xl font-bold text-white break-words">{quiz.title}</h2>
                 {quiz.description && (
-                  <p className="text-gray-400 text-sm mt-0.5">{quiz.description}</p>
+                  <p className="text-gray-400 text-xs sm:text-sm mt-0.5 line-clamp-2">{quiz.description}</p>
                 )}
                 <p className="text-gray-500 text-xs mt-1">
                   {quiz.question_count} question{quiz.question_count !== 1 ? "s" : ""} &middot;{" "}
@@ -142,19 +142,19 @@ export default function HostDashboard() {
                   onClick={() => handleStart(quiz.id)}
                   disabled={starting === quiz.id || quiz.question_count === 0}
                   title={quiz.question_count === 0 ? "Add questions before starting" : undefined}
-                  className="px-4 py-2 bg-green-600 hover:bg-green-500 disabled:opacity-50 text-white font-semibold rounded-lg transition-all text-sm"
+                  className="px-4 py-2 min-h-[44px] bg-green-600 hover:bg-green-500 disabled:opacity-50 text-white font-semibold rounded-lg transition-all text-sm touch-manipulation"
                 >
                   {starting === quiz.id ? "Starting..." : "Start Game"}
                 </button>
                 <Link
                   href={`/host/quiz/${quiz.id}`}
-                  className="px-4 py-2 bg-gray-600 hover:bg-gray-500 text-white font-semibold rounded-lg transition-all text-sm"
+                  className="px-4 py-2 min-h-[44px] flex items-center bg-gray-600 hover:bg-gray-500 text-white font-semibold rounded-lg transition-all text-sm touch-manipulation"
                 >
                   Edit
                 </Link>
                 <button
                   onClick={() => handleDelete(quiz.id)}
-                  className="px-4 py-2 bg-red-700 hover:bg-red-600 text-white font-semibold rounded-lg transition-all text-sm"
+                  className="px-4 py-2 min-h-[44px] bg-red-700 hover:bg-red-600 text-white font-semibold rounded-lg transition-all text-sm touch-manipulation"
                 >
                   Delete
                 </button>

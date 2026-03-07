@@ -130,84 +130,91 @@ export default function QuizEditor({ quizId }: { quizId?: number }) {
   const q = questions[activeQ];
 
   return (
-    <div className="min-h-screen p-4 max-w-5xl mx-auto">
+    <div className="min-h-screen p-3 sm:p-4 max-w-5xl mx-auto overflow-x-hidden">
       {/* Header */}
-      <div className="flex items-center gap-4 mb-6">
-        <button onClick={() => router.push("/host")} className="text-gray-400 hover:text-white text-sm">
+      <div className="flex flex-wrap items-center gap-2 sm:gap-4 mb-4 sm:mb-6">
+        <button
+          onClick={() => router.push("/host")}
+          className="text-gray-400 hover:text-white text-sm min-h-[44px] min-w-[44px] flex items-center touch-manipulation"
+        >
           &larr; Back
         </button>
-        <h1 className="text-2xl font-bold text-white flex-1">
+        <h1 className="text-lg sm:text-2xl font-bold text-white flex-1 min-w-0">
           {isEdit ? "Edit Quiz" : "New Quiz"}
         </h1>
         <button
           onClick={handleSave}
           disabled={saving}
-          className="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white font-semibold rounded-xl transition-all"
+          className="px-4 sm:px-6 py-2.5 min-h-[44px] bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white font-semibold rounded-xl transition-all touch-manipulation text-sm sm:text-base"
         >
           {saving ? "Saving..." : "Save Quiz"}
         </button>
       </div>
 
       {/* Quiz meta */}
-      <div className="bg-[#16213e] rounded-2xl p-5 mb-6 space-y-3">
+      <div className="bg-[#16213e] rounded-xl sm:rounded-2xl p-4 sm:p-5 mb-4 sm:mb-6 space-y-3">
         <input
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           placeholder="Quiz title *"
-          className="w-full bg-[#0f3460] text-white rounded-xl px-4 py-3 text-lg font-semibold placeholder-gray-500 outline-none focus:ring-2 focus:ring-indigo-500"
+          className="w-full bg-[#0f3460] text-white rounded-xl px-4 py-3 text-base sm:text-lg font-semibold placeholder-gray-500 outline-none focus:ring-2 focus:ring-indigo-500"
         />
         <textarea
           value={description}
           onChange={(e) => setDescription(e.target.value)}
           placeholder="Description (optional)"
           rows={2}
-          className="w-full bg-[#0f3460] text-white rounded-xl px-4 py-2 placeholder-gray-500 outline-none focus:ring-2 focus:ring-indigo-500 resize-none"
+          className="w-full bg-[#0f3460] text-white rounded-xl px-4 py-2 text-sm sm:text-base placeholder-gray-500 outline-none focus:ring-2 focus:ring-indigo-500 resize-none"
         />
       </div>
 
-      <div className="flex gap-4">
-        {/* Question list sidebar — more space, show question text + single/multi */}
-        <div className="w-80 min-w-0 flex-shrink-0 space-y-2">
-          {questions.map((qu, i) => (
+      <div className="flex flex-col lg:flex-row gap-4">
+        {/* Question list — horizontal scroll on mobile, sidebar on desktop */}
+        <div className="lg:w-80 lg:min-w-0 lg:flex-shrink-0">
+          <div className="flex gap-2 overflow-x-auto pb-2 lg:flex-col lg:overflow-visible lg:pb-0 lg:space-y-2 scrollbar-thin">
+            {questions.map((qu, i) => (
+              <button
+                key={i}
+                onClick={() => setActiveQ(i)}
+                type="button"
+                className={`flex-shrink-0 lg:w-full text-left px-3 py-2.5 rounded-xl transition-all min-h-[56px] touch-manipulation w-[85vw] max-w-[320px] lg:max-w-none ${
+                  i === activeQ
+                    ? "bg-indigo-600 text-white"
+                    : "bg-[#16213e] text-gray-400 hover:bg-[#1e2d50]"
+                }`}
+              >
+                <span className="text-xs sm:text-sm font-medium opacity-80">Q{i + 1}</span>
+                <span className="block text-xs sm:text-sm mt-0.5 line-clamp-2 leading-snug">
+                  {qu.question_text.trim() || "Untitled question"}
+                </span>
+                <span className={`inline-block mt-1.5 text-xs font-medium px-1.5 py-0.5 rounded ${
+                  qu.question_type === "multi"
+                    ? "bg-amber-600/30 text-amber-200"
+                    : "bg-slate-500/30 text-slate-300"
+                }`}>
+                  {qu.question_type === "single" ? "Single" : "Multi"}
+                </span>
+              </button>
+            ))}
             <button
-              key={i}
-              onClick={() => setActiveQ(i)}
-              className={`w-full text-left px-3 py-2.5 rounded-xl transition-all ${
-                i === activeQ
-                  ? "bg-indigo-600 text-white"
-                  : "bg-[#16213e] text-gray-400 hover:bg-[#1e2d50]"
-              }`}
+              onClick={addQuestion}
+              type="button"
+              className="flex-shrink-0 lg:w-full px-3 py-2 min-h-[48px] bg-[#16213e] hover:bg-[#1e2d50] text-gray-400 hover:text-white rounded-xl text-sm font-medium transition-all touch-manipulation w-[85vw] max-w-[320px] lg:max-w-none"
             >
-              <span className="text-sm font-medium opacity-80">Q{i + 1}</span>
-              <span className="block text-sm mt-0.5 line-clamp-2 leading-snug">
-                {qu.question_text.trim() || "Untitled question"}
-              </span>
-              <span className={`inline-block mt-1.5 text-xs font-medium px-1.5 py-0.5 rounded ${
-                qu.question_type === "multi"
-                  ? "bg-amber-600/30 text-amber-200"
-                  : "bg-slate-500/30 text-slate-300"
-              }`}>
-                {qu.question_type === "single" ? "Single" : "Multi"}
-              </span>
+              + Add Question
             </button>
-          ))}
-          <button
-            onClick={addQuestion}
-            className="w-full px-3 py-2 bg-[#16213e] hover:bg-[#1e2d50] text-gray-400 hover:text-white rounded-xl text-sm font-medium transition-all"
-          >
-            + Add Question
-          </button>
+          </div>
         </div>
 
         {/* Active question editor */}
         {q && (
-          <div className="flex-1 min-w-0 bg-[#16213e] rounded-2xl p-5 space-y-4">
-            <div className="flex items-center justify-between">
-              <h3 className="text-white font-semibold text-lg">Question {activeQ + 1}</h3>
+          <div className="flex-1 min-w-0 bg-[#16213e] rounded-xl sm:rounded-2xl p-4 sm:p-5 space-y-4">
+            <div className="flex items-center justify-between gap-2">
+              <h3 className="text-white font-semibold text-base sm:text-lg">Question {activeQ + 1}</h3>
               {questions.length > 1 && (
                 <button
                   onClick={() => removeQuestion(activeQ)}
-                  className="text-red-400 hover:text-red-300 text-sm"
+                  className="text-red-400 hover:text-red-300 text-sm min-h-[44px] min-w-[44px] flex items-center justify-center touch-manipulation"
                 >
                   Remove
                 </button>
@@ -219,29 +226,29 @@ export default function QuizEditor({ quizId }: { quizId?: number }) {
               onChange={(e) => setQuestion(activeQ, { question_text: e.target.value })}
               placeholder="Enter your question..."
               rows={3}
-              className="w-full bg-[#0f3460] text-white rounded-xl px-4 py-3 placeholder-gray-500 outline-none focus:ring-2 focus:ring-indigo-500 resize-none text-lg"
+              className="w-full bg-[#0f3460] text-white rounded-xl px-4 py-3 text-base sm:text-lg placeholder-gray-500 outline-none focus:ring-2 focus:ring-indigo-500 resize-none"
             />
 
-            <div className="flex gap-4 flex-wrap">
+            <div className="flex gap-3 sm:gap-4 flex-wrap">
               <div className="flex items-center gap-2">
-                <label className="text-gray-400 text-sm">Type:</label>
+                <label className="text-gray-400 text-xs sm:text-sm">Type:</label>
                 <select
                   value={q.question_type}
                   onChange={(e) =>
                     setQuestion(activeQ, { question_type: e.target.value as "single" | "multi" })
                   }
-                  className="bg-[#0f3460] text-white rounded-lg px-3 py-1.5 text-sm outline-none"
+                  className="bg-[#0f3460] text-white rounded-lg px-3 py-2 text-sm outline-none min-h-[44px] touch-manipulation"
                 >
                   <option value="single">Single choice</option>
                   <option value="multi">Multi choice</option>
                 </select>
               </div>
               <div className="flex items-center gap-2">
-                <label className="text-gray-400 text-sm">Timer:</label>
+                <label className="text-gray-400 text-xs sm:text-sm">Timer:</label>
                 <select
                   value={q.time_limit}
                   onChange={(e) => setQuestion(activeQ, { time_limit: Number(e.target.value) })}
-                  className="bg-[#0f3460] text-white rounded-lg px-3 py-1.5 text-sm outline-none"
+                  className="bg-[#0f3460] text-white rounded-lg px-3 py-2 text-sm outline-none min-h-[44px] touch-manipulation"
                 >
                   {[10, 15, 20, 30, 45, 60].map((t) => (
                     <option key={t} value={t}>{t}s</option>
@@ -251,17 +258,18 @@ export default function QuizEditor({ quizId }: { quizId?: number }) {
             </div>
 
             <div>
-              <p className="text-gray-400 text-sm mb-3">
+              <p className="text-gray-400 text-xs sm:text-sm mb-2 sm:mb-3">
                 {q.question_type === "single"
-                  ? "Click an answer to mark it correct"
-                  : "Click answers to mark correct (multiple allowed)"}
+                  ? "Tap an answer to mark it correct"
+                  : "Tap answers to mark correct (multiple allowed)"}
               </p>
-              <div className="flex flex-col gap-3">
+              <div className="flex flex-col gap-2 sm:gap-3">
                 {q.answers.map((a, ai) => (
-                  <div key={ai} className="flex items-center gap-3">
+                  <div key={ai} className="flex items-center gap-2 sm:gap-3">
                     <button
                       onClick={() => toggleCorrect(activeQ, ai)}
-                      className={`w-9 h-9 rounded-full flex-shrink-0 font-bold text-white text-sm transition-all ${
+                      type="button"
+                      className={`w-10 h-10 sm:w-9 sm:h-9 rounded-full flex-shrink-0 font-bold text-white text-sm transition-all touch-manipulation ${
                         ANSWER_COLORS[ai % 4]
                       } ${a.is_correct ? "ring-2 ring-white scale-105" : "opacity-70"}`}
                     >
@@ -272,12 +280,13 @@ export default function QuizEditor({ quizId }: { quizId?: number }) {
                       onChange={(e) => setAnswer(activeQ, ai, { answer_text: e.target.value })}
                       placeholder={`Answer ${ANSWER_LABELS[ai % 4]}`}
                       rows={2}
-                      className="flex-1 bg-[#0f3460] text-white rounded-lg px-3 py-2 text-sm placeholder-gray-500 outline-none focus:ring-2 focus:ring-indigo-500 resize-none"
+                      className="flex-1 min-w-0 bg-[#0f3460] text-white rounded-lg px-3 py-2 text-sm placeholder-gray-500 outline-none focus:ring-2 focus:ring-indigo-500 resize-none"
                     />
                     {q.answers.length > 2 && (
                       <button
                         onClick={() => removeAnswer(activeQ, ai)}
-                        className="text-gray-500 hover:text-red-400 text-lg leading-none flex-shrink-0"
+                        type="button"
+                        className="text-gray-500 hover:text-red-400 text-lg leading-none flex-shrink-0 min-w-[44px] min-h-[44px] flex items-center justify-center touch-manipulation"
                       >
                         &times;
                       </button>
@@ -288,7 +297,8 @@ export default function QuizEditor({ quizId }: { quizId?: number }) {
               {q.answers.length < 6 && (
                 <button
                   onClick={() => addAnswer(activeQ)}
-                  className="mt-3 text-indigo-400 hover:text-indigo-300 text-sm"
+                  type="button"
+                  className="mt-3 text-indigo-400 hover:text-indigo-300 text-sm min-h-[44px] flex items-center touch-manipulation"
                 >
                   + Add answer option
                 </button>
