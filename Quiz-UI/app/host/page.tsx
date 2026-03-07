@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { getQuizzes, deleteQuiz, createSession, apiFetch, type QuizSummary } from "@/lib/api";
+import { getQuizzes, getQuiz, deleteQuiz, createQuiz, createSession, apiFetch, type QuizSummary } from "@/lib/api";
 import { useRouter } from "next/navigation";
 import Logo from "@/components/Logo";
 
@@ -13,6 +13,8 @@ export default function HostDashboard() {
   const [me, setMe] = useState<Me | null>(null);
   const [loading, setLoading] = useState(true);
   const [starting, setStarting] = useState<number | null>(null);
+  const [duplicating, setDuplicating] = useState<number | null>(null);
+  const [deleting, setDeleting] = useState<number | null>(null);
   const [error, setError] = useState("");
   const router = useRouter();
 
@@ -42,11 +44,42 @@ export default function HostDashboard() {
 
   const handleDelete = async (id: number) => {
     if (!confirm("Delete this quiz and all its questions?")) return;
+    setDeleting(id);
+    setError("");
     try {
       await deleteQuiz(id);
       setQuizzes((q) => q.filter((x) => x.id !== id));
+      await fetchQuizzes();
     } catch {
       setError("Failed to delete quiz.");
+    } finally {
+      setDeleting(null);
+    }
+  };
+
+  const handleDuplicate = async (quiz: QuizSummary) => {
+    setError("");
+    setDuplicating(quiz.id);
+    try {
+      const full = await getQuiz(quiz.id);
+      const body = {
+        title: `${full.title} (copy)`,
+        description: full.description ?? "",
+        questions: (full.questions ?? []).map((q) => ({
+          question_text: q.question_text,
+          question_type: q.question_type,
+          time_limit: q.time_limit,
+          answers: (q.answers ?? []).map((a) => ({ answer_text: a.answer_text, is_correct: a.is_correct })),
+        })),
+      };
+      await createQuiz(body);
+      await fetchQuizzes();
+    } catch (e) {
+      const message = e instanceof Error ? e.message : "Failed to duplicate quiz.";
+      console.error("Duplicate quiz failed:", e);
+      setError(`Duplicate failed: ${message}`);
+    } finally {
+      setDuplicating(null);
     }
   };
 
@@ -153,10 +186,34 @@ export default function HostDashboard() {
                   Edit
                 </Link>
                 <button
-                  onClick={() => handleDelete(quiz.id)}
-                  className="px-4 py-2 min-h-[44px] bg-red-700 hover:bg-red-600 text-white font-semibold rounded-lg transition-all text-sm touch-manipulation"
+                  onClick={() => handleDuplicate(quiz)}
+                  disabled={duplicating === quiz.id}
+                  title="Duplicate this quiz"
+                  className="px-4 py-2 min-h-[44px] flex items-center justify-center gap-2 bg-slate-600 hover:bg-slate-500 disabled:opacity-50 text-white font-semibold rounded-lg transition-all text-sm touch-manipulation"
                 >
-                  Delete
+                  {duplicating === quiz.id ? (
+                    <>
+                      <span className="inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" aria-hidden />
+                      Copying…
+                    </>
+                  ) : (
+                    "Duplicate"
+                  )}
+                </button>
+                <button
+                  onClick={() => handleDelete(quiz.id)}
+                  disabled={deleting === quiz.id}
+                  title="Delete this quiz"
+                  className="px-4 py-2 min-h-[44px] flex items-center justify-center gap-2 bg-red-700 hover:bg-red-600 disabled:opacity-50 text-white font-semibold rounded-lg transition-all text-sm touch-manipulation"
+                >
+                  {deleting === quiz.id ? (
+                    <>
+                      <span className="inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" aria-hidden />
+                      Deleting…
+                    </>
+                  ) : (
+                    "Delete"
+                  )}
                 </button>
               </div>
             </div>

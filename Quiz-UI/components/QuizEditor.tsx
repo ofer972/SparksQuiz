@@ -102,18 +102,52 @@ export default function QuizEditor({ quizId }: { quizId?: number }) {
     setActiveQ(Math.max(0, activeQ - 1));
   };
 
-  const handleSave = async () => {
-    if (!title.trim()) return alert("Quiz title is required");
-    if (questions.length === 0) return alert("Add at least one question");
-    for (const [qi, q] of questions.entries()) {
-      if (!q.question_text.trim()) return alert(`Question ${qi + 1} has no text`);
-      if (q.answers.length < 2) return alert(`Question ${qi + 1} needs at least 2 answers`);
-      if (q.answers.some((a) => !a.answer_text.trim())) return alert(`Question ${qi + 1} has a blank answer option`);
-      if (!q.answers.some((a) => a.is_correct)) return alert(`Question ${qi + 1} needs a correct answer`);
+  const buildSaveBody = () => ({
+    title: title.trim(),
+    description: description.trim(),
+    questions: questions.map((q) => ({
+      question_text: q.question_text,
+      question_type: q.question_type,
+      time_limit: q.time_limit,
+      answers: q.answers.map((a) => ({ answer_text: a.answer_text, is_correct: a.is_correct })),
+    })),
+  });
+
+  const validateForSave = (): boolean => {
+    if (!title.trim()) {
+      alert("Quiz title is required");
+      return false;
     }
+    if (questions.length === 0) {
+      alert("Add at least one question");
+      return false;
+    }
+    for (const [qi, q] of questions.entries()) {
+      if (!q.question_text.trim()) {
+        alert(`Question ${qi + 1} has no text`);
+        return false;
+      }
+      if (q.answers.length < 2) {
+        alert(`Question ${qi + 1} needs at least 2 answers`);
+        return false;
+      }
+      if (q.answers.some((a) => !a.answer_text.trim())) {
+        alert(`Question ${qi + 1} has a blank answer option`);
+        return false;
+      }
+      if (!q.answers.some((a) => a.is_correct)) {
+        alert(`Question ${qi + 1} needs a correct answer`);
+        return false;
+      }
+    }
+    return true;
+  };
+
+  const handleSave = async () => {
+    if (!validateForSave()) return;
     setSaving(true);
     try {
-      const body = { title, description, questions };
+      const body = buildSaveBody();
       if (isEdit) {
         await updateQuiz(quizId, body);
       } else {
@@ -144,13 +178,15 @@ export default function QuizEditor({ quizId }: { quizId?: number }) {
         <h1 className="text-lg sm:text-2xl font-bold text-white flex-1 min-w-0">
           {isEdit ? "Edit Quiz" : "New Quiz"}
         </h1>
-        <button
-          onClick={handleSave}
-          disabled={saving}
-          className="px-4 sm:px-6 py-2.5 min-h-[44px] bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white font-semibold rounded-xl transition-all touch-manipulation text-sm sm:text-base"
-        >
-          {saving ? "Saving..." : "Save Quiz"}
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={handleSave}
+            disabled={saving}
+            className="px-4 sm:px-6 py-2.5 min-h-[44px] bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white font-semibold rounded-xl transition-all touch-manipulation text-sm sm:text-base"
+          >
+            {saving ? "Saving..." : "Save Quiz"}
+          </button>
+        </div>
       </div>
 
       {/* Quiz meta */}
