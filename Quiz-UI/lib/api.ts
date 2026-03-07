@@ -18,6 +18,8 @@ export async function apiFetch<T>(path: string, options?: RequestInit): Promise<
       throw e;
     }
   }
+  // 204 No Content has no body; res.json() would throw
+  if (res.status === 204) return undefined as Promise<T>;
   return res.json() as Promise<T>;
 }
 
