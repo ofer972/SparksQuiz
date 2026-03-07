@@ -70,7 +70,7 @@ def create_quiz(conn: Connection, title: str, description: str | None, questions
                 "quiz_id": quiz_id,
                 "question_text": q_data["question_text"],
                 "question_type": q_data.get("question_type", "single"),
-                "time_limit": q_data.get("time_limit", 20),
+                "time_limit": q_data.get("time_limit", 30),
                 "order_index": idx,
             },
         ).fetchone()
@@ -108,7 +108,7 @@ def update_quiz(conn: Connection, quiz_id: int, title: str, description: str | N
                 "quiz_id": quiz_id,
                 "question_text": q_data["question_text"],
                 "question_type": q_data.get("question_type", "single"),
-                "time_limit": q_data.get("time_limit", 20),
+                "time_limit": q_data.get("time_limit", 30),
                 "order_index": idx,
             },
         ).fetchone()

@@ -22,7 +22,7 @@ def initialize_tables(engine):
                 quiz_id       INTEGER REFERENCES quizzes(id) ON DELETE CASCADE,
                 question_text TEXT NOT NULL,
                 question_type VARCHAR(20) DEFAULT 'single',
-                time_limit    INTEGER DEFAULT 20,
+                time_limit    INTEGER DEFAULT 30,
                 order_index   INTEGER DEFAULT 0
             )
         """))

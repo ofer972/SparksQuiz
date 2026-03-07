@@ -10,7 +10,7 @@ class AnswerIn(BaseModel):
 class QuestionIn(BaseModel):
     question_text: str
     question_type: str = "single"
-    time_limit: int = 20
+    time_limit: int = 30
     answers: list[AnswerIn] = []
 
 

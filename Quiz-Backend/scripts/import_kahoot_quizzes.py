@@ -235,7 +235,7 @@ def _parse_question_sheet(ws, sheet_title: str, default_time: int) -> dict | Non
     }
 
 
-def parse_excel_to_quiz(file_path: Path, default_time: int = 20) -> tuple[str, list[dict]] | None:
+def parse_excel_to_quiz(file_path: Path, default_time: int = 30) -> tuple[str, list[dict]] | None:
     """
     Read Excel file: each numbered sheet ('1 Quiz', '2 Quiz', ...) = one question.
     Return (quiz_title, questions) or None on error.
